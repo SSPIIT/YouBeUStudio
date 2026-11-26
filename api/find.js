@@ -53,8 +53,13 @@ async function analyse(key, img, hints) {
   const prompt = `You are an expert fashion merchandiser for Indian online stores (Myntra, Amazon, Flipkart, Meesho, AJIO).
 The image is what a shopper made in a design app: a hand sketch (possibly rough), a filled flat sketch, or an edited photo of a garment. It shows the garment they want to buy.
 App hints (facts recorded by the app, trust them for colours and prints): ${JSON.stringify(hints || {})}
-Describe the garment so we can find it in stores. Return JSON only:
-{"garment_type": "e.g. kurta, A-line dress, crop top, palazzo pants, saree blouse",
+Rules:
+- Describe ONLY what is actually visible. Never invent a garment type, gender, sleeve or neckline that is not drawn.
+- First decide if a garment shape (an outline or silhouette of clothing) is visible. If the image is only a filled area, a fabric swatch or a print with no garment outline (or the hints say print_only), set "garment_visible": false, "garment_type": "any", sleeve/neckline/length/silhouette to "n/a", and make search_query about the print and colours only, ending with the word "clothing" (e.g. "orange and white vertical striped clothing").
+- Gender: use "unknown" and do NOT put women/men in search_query, unless the garment can only be for one gender (e.g. saree, lehenga, blouse, bra) or the hints say so.
+Return JSON only:
+{"garment_visible": true,
+ "garment_type": "e.g. kurta, A-line dress, crop top, palazzo pants, saree blouse, or any",
  "gender": "women|men|unisex|kids|unknown",
  "colors": ["main colour names a shopper would use, e.g. maroon, mustard yellow"],
  "pattern": "solid | floral | polka dot | striped | checked | paisley | ikat | block print | embroidered | ...",
@@ -63,7 +68,7 @@ Describe the garment so we can find it in stores. Return JSON only:
  "length": "crop | regular | hip | knee | midi | ankle | floor | n/a",
  "silhouette": "straight | A-line | flared | fit and flare | bodycon | anarkali | wide-leg | relaxed | ...",
  "details": ["up to 4 visible design details, e.g. tiered hem, yoke print, side slits, belt"],
- "search_query": "6-10 words, exactly how an Indian shopper would search for this on Myntra; include colour, print, key cut and garment type; include 'women' or 'men' only when clear",
+ "search_query": "5-10 words, how an Indian shopper would search for this on Myntra: colour, print, key cut and garment type (only the parts that are visible)",
  "summary": "one short sentence describing the design",
  "confidence": 0.0}`;
   return gemini(key, [{ text: prompt }, imgPart(img.mime, img.b64)]);
@@ -103,7 +108,9 @@ async function rerank(key, img, analysis, items) {
   const pics = await Promise.all(cand.map(c => fetchImageB64(c.image)));
   const parts = [{ text: `Image 0 is a shopper's design (sketch or edited photo). Target: ${analysis.summary || analysis.search_query}.
 The next images are store products, numbered 1..N in order. Score how closely each PRODUCT LOOKS like the design, 0-100, weighing:
-garment type 35%, silhouette/cut and length 25%, colour 20%, print/pattern 15%, details 5%. Judge the garment only, ignore models, backgrounds and photo style.
+${analysis.garment_visible === false || analysis.garment_type === 'any'
+  ? 'The design is a PRINT/COLOUR only, with no garment shape: any garment type is fine. Weigh print/pattern 50%, colours 40%, overall look 10%.'
+  : 'garment type 35%, silhouette/cut and length 25%, colour 20%, print/pattern 15%, details 5%.'} Judge the garment only, ignore models, backgrounds and photo style.
 Return JSON only: {"scores":[{"i":1,"score":0,"reason":"max 12 words: what matches or differs"}]}` }, { text: 'Image 0 (design):' }, imgPart(img.mime, img.b64)];
   const idx = [];
   pics.forEach((p, k) => { if (p) { idx.push(k); parts.push({ text: `Image ${idx.length} (product):` }, imgPart(p.mime, p.b64)); } });

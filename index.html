@@ -1128,7 +1128,9 @@ const NAMED = [['black', '#1c1f23'], ['charcoal grey', '#4a4f57'], ['grey', '#8d
 function colourName(hex) { const [r, g, b] = hexRgb(hex); let best = NAMED[0][0], bd = 1e9; for (const [n, h] of NAMED) { const [R, G, B] = hexRgb(h); const d = (r - R) ** 2 * 2 + (g - G) ** 2 * 4 + (b - B) ** 2 * 3; if (d < bd) { bd = d; best = n; } } return best; }
 function hints() {
   const used = fillLog.slice(-6).map(f => f.pattern === 'solid' ? { fill: 'solid', colour: colourName(f.a) } : { fill: PATTERNS[f.pattern].n.toLowerCase() + ' print', colour: colourName(f.a), background: colourName(f.b) });
-  return { source: S.hasPhoto ? 'edited photo of a real garment' : 'hand sketch / flat sketch', fills_applied: used, pen_colours: S.recent.slice(0, 4).map(colourName) };
+  const h = { source: S.hasPhoto ? 'edited photo of a real garment' : 'hand sketch / flat sketch', fills_applied: used, pen_colours: S.recent.slice(0, 4).map(colourName) };
+  if (!S.hasPhoto && pageFlooded()) { h.print_only = true; h.note = 'The user filled the whole page with this print: they are searching by print and colour, for any garment.'; }
+  return h;
 }
 function pageFlooded() { // colour reaching all four page corners means a fill leaked outside the garment
   const d = X.colour.getImageData(0, 0, W, H).data, at = (x, y) => d[(y * W + x) * 4 + 3] > 200;
@@ -1168,7 +1170,6 @@ function storeLinks(q) { $('fStores').innerHTML = q ? 'Also search the stores di
 async function runFind(query) {
   const img = query ? lastImg : exportImage();
   if (!img) { toast('Draw something or upload a photo first.'); return; }
-  if (!query && !S.hasPhoto && pageFlooded()) { toast('Your fill covers the whole page, so there is no garment shape to find. Undo the fill, then click inside the garment outline.'); return; }
   lastImg = img;
   $('finder').classList.add('open'); $('fPrev').src = img; $('fResults').innerHTML = ''; if (!query) { $('fAnalysis').innerHTML = ''; $('fqWrap').classList.add('hidden'); $('fQuery').value = ''; } storeLinks(query || ''); $('fAgain').disabled = true;
   steps(query ? 1 : 0);
