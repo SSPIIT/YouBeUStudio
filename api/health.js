@@ -49,6 +49,10 @@ module.exports = async function handler(req, res) {
       }
     } catch (e) { out.cloudflare_token = { ok: false, error: String(e.message).slice(0, 120) }; }
   }
+  try {
+    const { cmd, configured } = require('./_store.js');
+    out.database = configured() ? { set: true, ok: (await cmd('PING')) === 'PONG' } : { set: false };
+  } catch (e) { out.database = { set: true, ok: false, error: String(e.message).slice(0, 120) }; }
   out.ready = !!(out.gemini?.ok && out.serpapi?.ok);
   out.model_photos_ready = !!(process.env.CF_ACCOUNT_ID && out.cloudflare_token?.ok);
   res.status(200).json(out);
