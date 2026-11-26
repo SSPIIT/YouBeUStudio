@@ -33,6 +33,14 @@ module.exports = async function handler(req, res) {
       } catch (e) { out.sample_search = { ok: false, error: String(e.message).slice(0, 160) }; }
     }
   }
+  out.cloudflare_keys_set = { CF_ACCOUNT_ID: !!process.env.CF_ACCOUNT_ID, CF_API_TOKEN: !!process.env.CF_API_TOKEN };
+  if (process.env.CF_API_TOKEN) {
+    try {
+      const r = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', { headers: { authorization: 'Bearer ' + process.env.CF_API_TOKEN } }); const j = await r.json().catch(() => ({}));
+      out.cloudflare_token = j.success ? { ok: true, status: j.result?.status } : { ok: false, error: (j.errors || []).map(e => e.message).join('; ') || r.status };
+    } catch (e) { out.cloudflare_token = { ok: false, error: String(e.message).slice(0, 120) }; }
+  }
   out.ready = !!(out.gemini?.ok && out.serpapi?.ok);
+  out.model_photos_ready = !!(process.env.CF_ACCOUNT_ID && out.cloudflare_token?.ok);
   res.status(200).json(out);
 };
