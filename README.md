@@ -13,7 +13,7 @@ This is step 1 of **YouBeU**, which started as our team's Myntra HackerRamp proj
 
 - **Pen** (pressure-sensitive with a stylus) for clean lines, and a **paint brush** that colours under the lines
 - **Fill** with solid colour or 16 procedural patterns (floral, polka, stripes, pinstripe, checks, plaid, chevron, paisley, leaves, ikat, denim, linen, knit, houndstooth, sequins), with adjustable pattern size and gap closing for outlines that aren't fully closed
-- **Photo editing:** upload or drop a garment photo, then recolour it or add a print while keeping its folds and shading
+- **Photo garment editing:** upload a photo and the garment is found automatically (Gemini locates it, the browser refines the exact pixels; fix it with Add/Remove brushes). Then recolour it or add a print (folds and shading kept), shorten or lengthen it (the hem shape is kept), or add short, elbow, 3/4 or full sleeves made from the garment's own fabric
 - **Editable templates:** top, kurta, dress, skirt and trousers, with options for sleeves, neckline, length and silhouette; place them as lines or show them as a tracing guide
 - **Select and move:** click a shape (or drag a box) to move, resize, flip, duplicate or delete it
 - **Mirror mode** for symmetric garments, an eraser per layer, a colour picker, recent colours, and a second colour for pattern grounds

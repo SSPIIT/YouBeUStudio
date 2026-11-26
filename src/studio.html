@@ -75,6 +75,7 @@ button,input,select{font:inherit;color:inherit}
 .empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:15;text-align:center;color:#8a9199;font-size:14px;padding:30px}
 .empty b{display:block;color:#3d434a;font-size:16px;margin-bottom:4px}
 .hidden{display:none!important}
+.gstat{font-size:13px;line-height:1.4;margin-bottom:6px}.chk{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:4px;cursor:pointer}.chk input{accent-color:var(--acc)}
 .finder{position:fixed;top:52px;right:0;bottom:30px;width:min(460px,100%);background:var(--chrome);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.08);z-index:40;overflow-y:auto;transform:translateX(105%);transition:transform .25s ease}
 .finder.open{transform:none}
 .fbar{display:flex;align-items:center;padding:8px 10px 8px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--chrome);z-index:2;font-size:15px}
@@ -143,6 +144,20 @@ button,input,select{font:inherit;color:inherit}
   </div>
 
   <aside class="panel" aria-label="Properties">
+    <section class="sec hidden" id="gSec">
+      <h3>Garment in photo <button class="tb" id="gRedetect" style="height:28px;font-size:12px">Detect again</button></h3>
+      <div class="gstat" id="gStatus"></div>
+      <label class="chk"><input type="checkbox" id="gShow" checked> Show selection</label>
+      <div class="lbl">Fix the selection</div>
+      <div class="seg"><button id="gAdd" title="Paint over parts of the garment that were missed">+ Add to garment</button><button id="gRem" title="Paint over things that are not the garment">− Remove</button></div>
+      <div class="lbl">Colour or print (uses the Colour and Fill choices below)</div>
+      <button class="tb pri" id="gApply">Apply to whole garment</button>
+      <div class="lbl">Length</div>
+      <div class="row" style="margin-top:0"><input type="range" id="gLen" min="-45" max="45" value="0" step="5" aria-label="Change length"><output id="gLenO" style="width:44px">0%</output><button class="tb" id="gLenApply">Apply</button></div>
+      <div class="lbl">Add sleeves</div>
+      <div class="seg" id="gSleeveSeg"><button data-v="short" aria-pressed="true">Short</button><button data-v="elbow" aria-pressed="false">Elbow</button><button data-v="three" aria-pressed="false">3/4</button><button data-v="full" aria-pressed="false">Full</button></div>
+      <button class="tb" id="gSleeveAdd" style="margin-top:8px">Add sleeves</button>
+    </section>
     <section class="sec">
       <h3>Colour</h3>
       <div class="cur">
@@ -214,7 +229,7 @@ const X = Object.fromEntries(Object.entries(L).map(([k, c]) => [k, c.getContext(
 let z = 1; for (const k of ['photo', 'colour', 'floatC', 'lines', 'floatL', 'stroke', 'guide']) L[k].style.zIndex = z++;
 
 // ---------- state ----------
-const S = { ground: 'keep', tool: 'pen', colA: '#1c1f23', colB: '#ffffff', size: { pen: 4, paint: 28, eraser: 24 }, opac: { pen: 100, paint: 85, eraser: 100 }, smooth: 45, erase: 'both', pattern: 'solid', pscale: 100, gap: 3, tol: 38, mirror: false, recent: [], hasPhoto: false };
+const S = { ground: 'keep', tool: 'pen', colA: '#1c1f23', colB: '#ffffff', size: { pen: 4, paint: 28, eraser: 24, madd: 30, mrem: 30 }, opac: { pen: 100, paint: 85, eraser: 100 }, smooth: 45, erase: 'both', pattern: 'solid', pscale: 100, gap: 3, tol: 38, mirror: false, recent: [], hasPhoto: false };
 const toast = (t) => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2600); };
 
 // ---------- icons + tool rail ----------
@@ -232,17 +247,20 @@ $('rail').innerHTML = TOOLS.map(([k, t]) => `<button class="ib" data-tool="${k}"
   `<div style="height:8px"></div><button class="ib" id="mirrorBtn" title="Mirror drawing (M): draw one side, get both" aria-label="Mirror drawing" aria-pressed="false"><svg viewBox="0 0 24 24">${ICON.mirror}</svg></button>`;
 $('rail').addEventListener('click', e => { const b = e.target.closest('[data-tool]'); if (b) setTool(b.dataset.tool); });
 $('mirrorBtn').onclick = () => setMirror(!S.mirror);
-const HINTS = { select: 'Click a shape to grab it, or drag a box. Drag to move, corners to resize. Enter to drop.', pen: 'Draw outlines and details. Lines stay crisp on top of colour.', paint: 'Paints colour under your lines, like markers on a flat sketch.', eraser: 'Choose what it erases in the panel.', fill: 'Click inside a closed shape, or on a fabric in a photo.', picker: 'Click anywhere to pick that colour.' };
+const HINTS = { madd: 'Paint over parts of the garment the selection missed.', mrem: 'Paint over things that are not the garment (arms, background).', select: 'Click a shape to grab it, or drag a box. Drag to move, corners to resize. Enter to drop.', pen: 'Draw outlines and details. Lines stay crisp on top of colour.', paint: 'Paints colour under your lines, like markers on a flat sketch.', eraser: 'Choose what it erases in the panel.', fill: 'Click inside a closed shape, or on a fabric in a photo.', picker: 'Click anywhere to pick that colour.' };
 function setTool(t) {
   if (t !== 'select') dropSel();
+  if (typeof drawMaskOv === 'function' && gmask) setTimeout(drawMaskOv);
   S.tool = t;
   stage.style.cursor = t === 'select' ? 'default' : 'none';
   for (const b of $('rail').querySelectorAll('[data-tool]')) b.setAttribute('aria-pressed', b.dataset.tool === t);
-  $('stTool').textContent = { select: 'Select', pen: 'Pen', paint: 'Paint brush', eraser: 'Eraser', fill: 'Fill', picker: 'Colour picker' }[t];
+  $('stTool').textContent = { madd: 'Add to garment', mrem: 'Remove from garment', select: 'Select', pen: 'Pen', paint: 'Paint brush', eraser: 'Eraser', fill: 'Fill', picker: 'Colour picker' }[t];
   $('stHint').textContent = HINTS[t];
-  const br = t === 'pen' || t === 'paint' || t === 'eraser';
+  const br = ['pen', 'paint', 'eraser', 'madd', 'mrem'].includes(t);
+  if (t === 'madd' || t === 'mrem') { showMask = true; $('gShow').checked = true; drawMaskOv(); }
   $('secBrush').classList.toggle('hidden', !br);
-  if (br) { $('brushTitle').textContent = $('stTool').textContent; $('size').value = S.size[t]; $('opac').value = S.opac[t]; syncOut(); }
+  if (br) { $('brushTitle').textContent = $('stTool').textContent; $('size').value = S.size[t]; $('opac').value = S.opac[t] ?? 100; syncOut(); }
+  $('opac').parentElement.classList.toggle('hidden', t === 'madd' || t === 'mrem'); $('smooth').parentElement.classList.toggle('hidden', t === 'madd' || t === 'mrem');
   $('eraseRow').classList.toggle('hidden', t !== 'eraser');
   updateCursor();
 }
@@ -317,9 +335,9 @@ function drawPatternPreviews() { for (const b of $('patterns').children) { const
 
 // ---------- history ----------
 const hist = [], redoS = [];
-function snap(keys) { return keys.map(k => { const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(L[k], 0, 0); return { k, c }; }); }
+function snap(keys) { return keys.map(k => { if (k === 'mask') return { k, m: gmask ? gmask.slice() : null }; const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(L[k], 0, 0); return { k, c }; }); }
 function commit(keys) { if (sel) dropSel(); hist.push(snap(keys)); if (hist.length > 25) hist.shift(); redoS.length = 0; histUI(); }
-function restore(from, to) { const s = from.pop(); if (!s) return; to.push(snap(s.map(x => x.k))); for (const { k, c } of s) { X[k].clearRect(0, 0, W, H); X[k].drawImage(c, 0, 0); } histUI(); refreshEmpty(); }
+function restore(from, to) { const s = from.pop(); if (!s) return; to.push(snap(s.map(x => x.k))); for (const { k, c, m } of s) { if (k === 'mask') { gmask = m; drawMaskOv(); continue; } X[k].clearRect(0, 0, W, H); X[k].drawImage(c, 0, 0); } histUI(); refreshEmpty(); }
 function histUI() { $('undo').disabled = !hist.length; $('redo').disabled = !redoS.length; }
 $('undo').onclick = () => { if (sel) { cancelSel(); return; } restore(hist, redoS); }; $('redo').onclick = () => { dropSel(); restore(redoS, hist); };
 
@@ -333,6 +351,7 @@ function beginStroke(e) {
   const t = S.tool;
   if (t === 'picker') { pick(x, y); return; }
   if (t === 'fill') { doFill(x, y); return; }
+  if (t === 'madd' || t === 'mrem') { if (!S.hasPhoto) { toast('Upload a photo first.'); return; } commit(['mask']); drawing = { t, last: [x, y], sm: [x, y] }; stampMask(x, y, x, y, t === 'madd'); return; }
   if (t === 'eraser') { const keys = S.erase === 'both' ? ['lines', 'colour'] : [S.erase === 'colour' ? 'colour' : S.erase]; commit(keys); drawing = { t, keys, last: [x, y], sm: [x, y] }; eraseSeg(x, y, x, y, e); return; }
   // pen / paint: draw into a stroke canvas placed right above the target layer, composite on release
   const tgt = strokeTarget();
@@ -354,6 +373,7 @@ function moveStroke(e) {
     const k = 1 - S.smooth / 100 * 0.85; // stabilizer
     drawing.sm = [drawing.sm[0] + (x - drawing.sm[0]) * k, drawing.sm[1] + (y - drawing.sm[1]) * k];
     [x, y] = drawing.sm;
+    if (drawing.t === 'madd' || drawing.t === 'mrem') { stampMask(drawing.last[0], drawing.last[1], x, y, drawing.t === 'madd'); drawing.last = [x, y]; continue; }
     if (drawing.t === 'eraser') { eraseSeg(drawing.last[0], drawing.last[1], x, y, ev); drawing.last = [x, y]; continue; }
     const pts = drawing.pts, p = pr(ev); pts.push([x, y, p]);
     const n = pts.length; if (n < 3) continue;
@@ -442,9 +462,10 @@ function doFill(x, y) {
     if (lineRegion.edge) toast('That area is open to the edge, so the background was filled. Undo, then close the outline or raise "Close gaps".');
   } else if (onPhoto) {
     const sr = pd[p0 * 4], sg = pd[p0 * 4 + 1], sb = pd[p0 * 4 + 2], tol2 = S.tol * S.tol * 3;
-    const reg = flood(x, y, (p) => { if (wall[p] || pd[p * 4 + 3] < 20) return false; const dr = pd[p * 4] - sr, dg = pd[p * 4 + 1] - sg, db = pd[p * 4 + 2] - sb; return dr * dr + dg * dg + db * db <= tol2; });
+    const inG = gmask && gmask[p0];
+    const reg = flood(x, y, (p) => { if (wall[p] || pd[p * 4 + 3] < 20 || (inG && !gmask[p])) return false; const dr = pd[p * 4] - sr, dg = pd[p * 4 + 1] - sg, db = pd[p * 4 + 2] - sb; return dr * dr + dg * dg + db * db <= tol2; });
     if (reg.n < 30) { toast('Nothing to fill there. Try raising "Photo match".'); return; }
-    const m = dil(reg.m, 2);
+    let m = dil(reg.m, 2); if (inG) for (let i = 0; i < m.length; i++) if (!gmask[i]) m[i] = 0;
     commit(['photo']);
     recolourPhoto(m, existingColour(X.photo, reg.m)); fillLog.push({ pattern: S.pattern, a: S.colA, b: lastGround });
   } else { toast(wallD[p0] ? 'You clicked on a line. Click inside the shape.' : 'Nothing to fill there.'); return; }
@@ -515,7 +536,7 @@ wrap.addEventListener('dragleave', e => { if (!wrap.contains(e.relatedTarget)) $
 wrap.addEventListener('drop', e => { e.preventDefault(); $('drop').style.display = 'none'; const f = [...e.dataTransfer.files].find(f => f.type.startsWith('image/')); if (f) loadPhoto(f); });
 function loadPhoto(f) {
   const url = URL.createObjectURL(f), img = new Image();
-  img.onload = () => { commit(['photo']); X.photo.clearRect(0, 0, W, H); const sc = Math.min(W / img.width, H / img.height) * 0.94, w = img.width * sc, h = img.height * sc; X.photo.drawImage(img, (W - w) / 2, (H - h) / 2, w, h); URL.revokeObjectURL(url); S.hasPhoto = true; renderLayers(); refreshEmpty(); setTool('fill'); toast('Photo added. Click on the garment with Fill to recolour it or add a print. Draw on top with the pen.'); };
+  img.onload = () => { commit(['photo']); X.photo.clearRect(0, 0, W, H); const sc = Math.min(W / img.width, H / img.height) * 0.94, w = img.width * sc, h = img.height * sc; X.photo.drawImage(img, (W - w) / 2, (H - h) / 2, w, h); URL.revokeObjectURL(url); S.hasPhoto = true; photoRect = { x: Math.round((W - w) / 2), y: Math.round((H - h) / 2), w: Math.round(w), h: Math.round(h) }; gmask = null; drawMaskOv(); detectGarment(); renderLayers(); refreshEmpty(); setTool('fill'); toast('Photo added. Finding the garment so you can recolour it, add a print, change its length or add sleeves.'); };
   img.onerror = () => toast('That file could not be opened as an image.');
   img.src = url;
 }
@@ -529,9 +550,9 @@ function renderLayers() {
 $('layers').addEventListener('click', e => {
   const eb = e.target.closest('[data-eye]'), cb = e.target.closest('[data-clr]');
   if (eb) { const k = eb.dataset.eye, vis = L[k].style.visibility === 'hidden'; L[k].style.visibility = vis ? 'visible' : 'hidden'; eb.setAttribute('aria-pressed', vis); }
-  if (cb) { const k = cb.dataset.clr; commit([k]); X[k].clearRect(0, 0, W, H); if (k === 'photo') { S.hasPhoto = false; renderLayers(); } refreshEmpty(); }
+  if (cb) { const k = cb.dataset.clr; commit([k]); X[k].clearRect(0, 0, W, H); if (k === 'photo') { S.hasPhoto = false; gmask = null; photoRect = null; drawMaskOv(); $('gSec').classList.add('hidden'); renderLayers(); } refreshEmpty(); }
 });
-$('clearAll').onclick = () => { commit(['lines', 'colour', 'photo']); for (const k of ['lines', 'colour', 'photo']) X[k].clearRect(0, 0, W, H); S.hasPhoto = false; renderLayers(); refreshEmpty(); toast('Canvas cleared. Undo brings it back.'); };
+$('clearAll').onclick = () => { commit(['lines', 'colour', 'photo']); for (const k of ['lines', 'colour', 'photo']) X[k].clearRect(0, 0, W, H); S.hasPhoto = false; gmask = null; photoRect = null; drawMaskOv(); $('gSec').classList.add('hidden'); renderLayers(); refreshEmpty(); toast('Canvas cleared. Undo brings it back.'); };
 
 function refreshEmpty() { const any = hist.length || S.hasPhoto || guideOn; $('empty').style.display = any ? 'none' : 'grid'; }
 
@@ -727,6 +748,198 @@ function renderResults(items, reranked) {
       <div class="fbody"><span class="fstore">${escH(it.store)}</span><span class="ftitle">${escH(it.title)}</span>${it.reason ? `<span class="freason">${escH(it.reason)}</span>` : ''}<span class="fgo">View on ${escH(it.store)} ↗</span></div>
     </a>`).join('');
 }
+
+// ---------- photo garment: detect, select, edit ----------
+let gmask = null, gInfo = null, photoRect = null, showMask = true;
+const G = { sleeve: 'short', len: 0 };
+function toLab(r, g, b) {
+  const f = (v) => { v /= 255; return v > 0.04045 ? ((v + 0.055) / 1.055) ** 2.4 : v / 12.92; };
+  const R = f(r), Gg = f(g), B = f(b);
+  let x = (R * 0.4124 + Gg * 0.3576 + B * 0.1805) / 0.95047, y = R * 0.2126 + Gg * 0.7152 + B * 0.0722, z = (R * 0.0193 + Gg * 0.1192 + B * 0.9505) / 1.08883;
+  const h = (t) => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; x = h(x); y = h(y); z = h(z);
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+function kmeans(pts, k, it = 10) {
+  if (!pts.length) return [];
+  const r = S2S.rng(5); let C = Array.from({ length: k }, () => pts[Math.floor(r() * pts.length)].slice()); let cnt = [];
+  for (let t = 0; t < it; t++) {
+    const sum = C.map(() => [0, 0, 0]); cnt = C.map(() => 0);
+    for (const p of pts) { let bi = 0, bd = 1e9; C.forEach((c, i) => { const d = (p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 + (p[2] - c[2]) ** 2; if (d < bd) { bd = d; bi = i; } }); sum[bi][0] += p[0]; sum[bi][1] += p[1]; sum[bi][2] += p[2]; cnt[bi]++; }
+    C = C.map((c, i) => cnt[i] ? sum[i].map(v => v / cnt[i]) : c);
+  }
+  return C.map((c, i) => ({ c, n: cnt[i] }));
+}
+const isSkin = ([L, a, b]) => L > 25 && L < 88 && a > 6 && a < 32 && b > 8 && b < 40 && b > a * 0.6;
+function ero(m, r) { const inv = new Uint8Array(m.length); for (let i = 0; i < m.length; i++) inv[i] = m[i] ? 0 : 1; const d = dil(inv, r); for (let i = 0; i < d.length; i++) d[i] = d[i] ? 0 : 1; return d; }
+function cleanMask(m, cx, cy) {
+  m = ero(dil(m, 3), 3); // close small gaps
+  // keep the piece under the centre (or the biggest piece)
+  let seed = cy * W + cx;
+  if (!m[seed]) { let best = -1, bn = 0; const seen = new Uint8Array(m.length); for (let i = 0; i < m.length; i += 97) if (m[i] && !seen[i]) { const r = flood(i % W, (i / W) | 0, p => m[p] === 1 && !seen[p]); for (let k = 0; k < r.m.length; k++) if (r.m[k]) seen[k] = 1; if (r.n > bn) { bn = r.n; best = i; } } if (best < 0) return m; seed = best; }
+  const keep = flood(seed % W, (seed / W) | 0, p => m[p] === 1).m;
+  // fill holes (prints, folds and buttons inside the garment)
+  const out = flood(0, 0, p => !keep[p]).m; const res = new Uint8Array(m.length); for (let i = 0; i < res.length; i++) res[i] = keep[i] || !out[i] ? 1 : 0;
+  return res;
+}
+function colourMask(box) {
+  const d = X.photo.getImageData(0, 0, W, H).data, pr = photoRect;
+  const at = (x, y) => { const o = (y * W + x) * 4; return d[o + 3] > 20 ? toLab(d[o], d[o + 1], d[o + 2]) : null; };
+  const fg = [], bg = [], r = S2S.rng(3);
+  for (let i = 0; i < 2500; i++) { const x = Math.round(box.x + box.w * (0.32 + 0.36 * r())), y = Math.round(box.y + box.h * (0.18 + 0.64 * r())); const p = at(x, y); if (p) fg.push(p); }
+  for (let i = 0; i < 6000 && bg.length < 2500; i++) { const x = Math.round(pr.x + pr.w * r()), y = Math.round(pr.y + pr.h * r()); if (x > box.x - 4 && x < box.x + box.w + 4 && y > box.y - 4 && y < box.y + box.h + 4) continue; const p = at(Math.min(W - 1, x), Math.min(H - 1, y)); if (p) bg.push(p); }
+  const F = kmeans(fg, 5), B = kmeans(bg, 5).filter(c => c.n > bg.length * 0.05);
+  const dist = (p, c) => Math.sqrt((p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 + (p[2] - c[2]) ** 2);
+  const skinTot = F.filter(f => isSkin(f.c)).reduce((a, f) => a + f.n, 0);
+  const keepF = F.filter(f => f.n > fg.length * 0.04 && !(isSkin(f.c) && skinTot < fg.length * 0.35) && Math.min(...B.map(b => dist(f.c, b.c))) > 7);
+  const m = new Uint8Array(W * H);
+  if (!keepF.length) return m;
+  for (let y = Math.max(0, Math.floor(box.y)); y < Math.min(H, box.y + box.h); y++) for (let x = Math.max(0, Math.floor(box.x)); x < Math.min(W, box.x + box.w); x++) {
+    const p = at(x, y); if (!p) continue;
+    const df = Math.min(...keepF.map(f => dist(p, f.c))), db = B.length ? Math.min(...B.map(b => dist(p, b.c))) : 99;
+    if (df < db * 0.95 && df < 30) m[y * W + x] = 1;
+  }
+  return cleanMask(m, Math.round(box.x + box.w / 2), Math.round(box.y + box.h * 0.45));
+}
+async function aiMask(dataUrl, box) {
+  return new Promise(res => {
+    const im = new Image(); im.onload = () => {
+      const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d', { willReadFrequently: true });
+      x.drawImage(im, box.x, box.y, box.w, box.h); const d = x.getImageData(0, 0, W, H).data, m = new Uint8Array(W * H); let n = 0;
+      for (let i = 0; i < m.length; i++) if (d[i * 4 + 3] > 0 && d[i * 4] > 127) { m[i] = 1; n++; }
+      res(n > box.w * box.h * 0.15 ? cleanMask(m, Math.round(box.x + box.w / 2), Math.round(box.y + box.h * 0.45)) : null);
+    }; im.onerror = () => res(null); im.src = dataUrl;
+  });
+}
+function photoCrop() { // the uploaded photo region, downscaled for the AI
+  const pr = photoRect, sc = Math.min(1, 1024 / Math.max(pr.w, pr.h)), c = document.createElement('canvas'); c.width = Math.round(pr.w * sc); c.height = Math.round(pr.h * sc);
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(L.photo, pr.x, pr.y, pr.w, pr.h, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', 0.9);
+}
+async function detectGarment() {
+  if (!photoRect) return;
+  $('gStatus').textContent = 'Finding the garment…'; $('gSec').classList.remove('hidden');
+  const pr = photoRect, toBox = (b) => ({ y: pr.y + b[0] / 1000 * pr.h, x: pr.x + b[1] / 1000 * pr.w, h: (b[2] - b[0]) / 1000 * pr.h, w: (b[3] - b[1]) / 1000 * pr.w });
+  let info = null, how = '';
+  try {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 60000);
+    const r = await fetch('api/detect', { signal: ctl.signal, method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ image: photoCrop() }) });
+    clearTimeout(t); const j = await r.json().catch(() => ({}));
+    if (r.ok) info = j; else how = j.error || '';
+  } catch (e) { how = 'AI not reachable'; }
+  let box, m = null;
+  if (info) {
+    box = toBox(info.box_2d);
+    if (info.mask) m = await aiMask(info.mask, box);
+    if (!m) m = colourMask(box);
+    gInfo = { plain: info.background === 'plain', label: info.label || 'garment', sleeves: info.sleeves, shoulders: info.shoulders ? { l: info.shoulders.left, r: info.shoulders.right } : null, toPt: (p) => p ? [pr.x + p[1] / 1000 * pr.w, pr.y + p[0] / 1000 * pr.h] : null };
+  } else { // offline fallback: assume the garment is centred in the photo
+    box = { x: pr.x + pr.w * 0.12, y: pr.y + pr.h * 0.08, w: pr.w * 0.76, h: pr.h * 0.84 }; m = colourMask(box); gInfo = { label: 'garment', shoulders: null, toPt: () => null };
+  }
+  const n = m.reduce((a, v) => a + v, 0);
+  if (n < 500) { gmask = null; $('gStatus').textContent = 'Could not separate the garment. Use “Add to garment” to paint over it.'; drawMaskOv(); return; }
+  gmask = m; showMask = true; $('gShow').checked = true; drawMaskOv();
+  $('gStatus').innerHTML = `Found: <b>${escH(gInfo.label)}</b>${info ? '' : ' <span style="color:var(--soft)">(offline estimate' + (how ? ': ' + escH(how) : '') + ')</span>'}. Check the teal area and refine it if needed.`;
+}
+const ovC = document.createElement('canvas'); ovC.width = W; ovC.height = H; ovC.id = 'cMask'; ovC.style.zIndex = 9; ovC.style.pointerEvents = 'none'; stage.insertBefore(ovC, $('mline'));
+let ovPending = false;
+function drawMaskOv() {
+  if (ovPending) return; ovPending = true;
+  requestAnimationFrame(() => {
+    ovPending = false; const x = ovC.getContext('2d'); x.clearRect(0, 0, W, H);
+    if (!gmask || !showMask) return;
+    const id = x.createImageData(W, H), d = id.data;
+    const tint = S.tool === 'madd' || S.tool === 'mrem';
+    for (let i = 0; i < gmask.length; i++) if (gmask[i]) { const edge = !gmask[i - 1] || !gmask[i + 1] || !gmask[i - W] || !gmask[i + W]; if (!edge && !tint) continue; const o = i * 4; d[o] = 15; d[o + 1] = edge ? 200 : 110; d[o + 2] = edge ? 190 : 104; d[o + 3] = edge ? 255 : 80; }
+    x.putImageData(id, 0, 0);
+  });
+}
+function stampMask(x0, y0, x1, y1, add) {
+  if (!gmask) gmask = new Uint8Array(W * H);
+  const r = S.size[S.tool] / 2, n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 2)), pd = X.photo.getImageData(0, 0, W, H).data;
+  for (let k = 0; k <= n; k++) { const cx = x0 + (x1 - x0) * k / n, cy = y0 + (y1 - y0) * k / n;
+    for (let y = Math.max(0, Math.floor(cy - r)); y <= Math.min(H - 1, cy + r); y++) for (let x = Math.max(0, Math.floor(cx - r)); x <= Math.min(W - 1, cx + r); x++) if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r) { const i = y * W + x; if (!add) gmask[i] = 0; else if (pd[i * 4 + 3] > 20) gmask[i] = 1; } }
+  drawMaskOv();
+}
+function borderColour() { // typical colour around the edge of the uploaded photo (the studio backdrop)
+  const pd = X.photo.getImageData(0, 0, W, H).data, pr = photoRect, v = [[], [], []];
+  for (let i = 0; i < 400; i++) { const t = i / 400, side = i % 4; const x = Math.round(side < 2 ? pr.x + 2 + (pr.w - 5) * t : side === 2 ? pr.x + 2 : pr.x + pr.w - 3), y = Math.round(side >= 2 ? pr.y + 2 + (pr.h - 5) * t : side === 0 ? pr.y + 2 : pr.y + pr.h - 3); const o = (y * W + x) * 4; for (let c = 0; c < 3; c++) v[c].push(pd[o + c]); }
+  return v.map(a => a.sort((p, q) => p - q)[a.length >> 1]);
+}
+function bgFill(d, oldMask, remove) {
+  if (gInfo && gInfo.plain) { const bc = borderColour(); for (let i = 0; i < remove.length; i++) if (remove[i]) { const o = i * 4, n = (Math.random() - 0.5) * 4; d[o] = bc[0] + n; d[o + 1] = bc[1] + n; d[o + 2] = bc[2] + n; d[o + 3] = 255; } return; } // fill removed garment pixels with what surrounds them in the same row
+  for (let y = 0; y < H; y++) {
+    const row = y * W; let x = 0;
+    while (x < W) {
+      if (!remove[row + x]) { x++; continue; }
+      let a = x; while (a > 0 && oldMask[row + a]) a--; a = Math.max(0, a - 6); let b = x; while (b < W - 1 && (oldMask[row + b] || remove[row + b])) b++; b = Math.min(W - 1, b + 6);
+      const ca = (row + a) * 4, cb = (row + b) * 4;
+      for (let k = x; k <= b && k < W; k++) { if (!remove[row + k]) continue; const t = b > a ? (k - a) / (b - a) : 0, o = (row + k) * 4; for (let c = 0; c < 3; c++) d[o + c] = d[ca + c] * (1 - t) + d[cb + c] * t; d[o + 3] = 255; }
+      x = b + 1;
+    }
+  }
+}
+function hemProfile(m) { const hem = new Int32Array(W).fill(-1), top = new Int32Array(W).fill(-1); for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) if (m[y * W + x]) { if (top[x] < 0) top[x] = y; hem[x] = y; } return { hem, top }; }
+function changeLength(delta) {
+  if (!gmask) { toast('No garment selected yet.'); return; }
+  commit(['photo', 'mask']);
+  const id = X.photo.getImageData(0, 0, W, H), d = id.data, src = new Uint8ClampedArray(d), old = gmask.slice();
+  const { hem, top } = hemProfile(old); let minTop = H, maxHem = 0; for (let x = 0; x < W; x++) if (hem[x] >= 0) { minTop = Math.min(minTop, top[x]); maxHem = Math.max(maxHem, hem[x]); }
+  const gh = maxHem - minTop, dy = Math.round(delta / 100 * gh);
+  const nm = old.slice(), remove = new Uint8Array(W * H);
+  if (dy < 0) {
+    for (let x = 0; x < W; x++) if (hem[x] >= 0) for (let y = Math.max(minTop + 10, hem[x] + dy + 1); y <= hem[x]; y++) if (old[y * W + x]) { remove[y * W + x] = 1; nm[y * W + x] = 0; }
+    bgFill(d, old, remove);
+    // soft shadow along the new hem
+    for (let x = 0; x < W; x++) if (hem[x] >= 0) { const y = hem[x] + dy; for (let k = 0; k < 3; k++) { const yy = y - k; if (yy > 0 && nm[yy * W + x]) { const o = (yy * W + x) * 4; for (let c = 0; c < 3; c++) d[o + c] *= 0.82 + k * 0.06; } } }
+  } else if (dy > 0) {
+    const ys = Math.round(minTop + gh * 0.55), bottom = photoRect.y + photoRect.h - 1;
+    for (let x = 0; x < W; x++) if (hem[x] > ys) for (let y = ys; y <= hem[x]; y++) if (old[y * W + x]) { remove[y * W + x] = 1; nm[y * W + x] = 0; }
+    bgFill(d, old, remove);
+    for (let x = 0; x < W; x++) { if (hem[x] <= ys) continue; const Lx = hem[x] - ys, nL = Math.min(bottom, hem[x] + dy) - ys;
+      for (let y = ys; y <= ys + nL; y++) { const sy = Math.round(ys + (y - ys) * Lx / nL), si = sy * W + x; if (!old[si]) continue; const o = (y * W + x) * 4, so = si * 4; d[o] = src[so]; d[o + 1] = src[so + 1]; d[o + 2] = src[so + 2]; d[o + 3] = 255; nm[y * W + x] = 1; } }
+  }
+  X.photo.putImageData(id, 0, 0); gmask = nm; drawMaskOv();
+  toast(dy < 0 ? 'Shortened. Undo if you want it back.' : 'Lengthened. Undo if you want it back.');
+}
+function addSleeves(kind) {
+  if (!gmask) { toast('No garment selected yet.'); return; }
+  const { hem, top } = hemProfile(gmask); let minTop = H, maxHem = 0; for (let x = 0; x < W; x++) if (hem[x] >= 0) { minTop = Math.min(minTop, top[x]); maxHem = Math.max(maxHem, hem[x]); }
+  const gh = maxHem - minTop;
+  let sl = gInfo && gInfo.toPt(gInfo.shoulders && gInfo.shoulders.l), sr = gInfo && gInfo.toPt(gInfo.shoulders && gInfo.shoulders.r);
+  const spanAt = (y) => { let a = -1, b = -1; for (let x = 0; x < W; x++) if (gmask[y * W + x]) { if (a < 0) a = x; b = x; } return [a, b]; };
+  if (!sl || !sr) { const ys = Math.round(minTop + gh * 0.06); const [a, b] = spanAt(ys); sl = [a, ys]; sr = [b, ys]; }
+  if (sr[0] < sl[0]) { const t = sl; sl = sr; sr = t; }
+  const tw = sr[0] - sl[0]; if (tw < 20) { toast('Could not find the shoulders. Refine the selection and try again.'); return; }
+  const P = { short: [0.45, 52], elbow: [0.82, 70], three: [1.1, 74], full: [1.5, 78] }[kind], sLen = P[0] * tw, th = P[1] * Math.PI / 180, cw = 0.26 * tw, arm = 0.32 * tw;
+  // fabric: a patch of the garment itself, so colour and print carry into the sleeves
+  const pd = X.photo.getImageData(0, 0, W, H).data, ps = Math.max(24, Math.min(90, Math.round(tw * 0.22)));
+  let patch = null;
+  for (const fy of [0.3, 0.4, 0.5, 0.22, 0.6]) for (const fx of [0.5, 0.4, 0.6]) { if (patch) break; const px = Math.round(sl[0] + tw * fx - ps / 2), py = Math.round(minTop + gh * fy); let ok = true; for (let y = py; y < py + ps && ok; y += 4) for (let x = px; x < px + ps; x += 4) if (!gmask[y * W + x]) { ok = false; break; } if (ok) patch = [px, py]; }
+  if (!patch) patch = [Math.round((sl[0] + sr[0]) / 2 - ps / 2), Math.round(minTop + gh * 0.35)];
+  const pc = document.createElement('canvas'); pc.width = pc.height = ps; pc.getContext('2d').drawImage(L.photo, patch[0], patch[1], ps, ps, 0, 0, ps, ps);
+  commit(['photo', 'mask']);
+  const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H; const t = tmp.getContext('2d', { willReadFrequently: true });
+  for (const [S0, dir] of [[sr, 1], [sl, -1]]) {
+    const sx = S0[0], sy = S0[1], U = [sx - dir * 0.05 * tw, sy + arm];
+    const co = [sx + dir * sLen * Math.cos(th), sy + sLen * Math.sin(th)], ci = [co[0] - dir * cw * Math.sin(th), co[1] + cw * Math.cos(th)];
+    t.beginPath(); t.moveTo(sx - dir * 0.03 * tw, sy - 0.02 * tw); t.quadraticCurveTo(sx + dir * 0.06 * tw, sy - 0.01 * tw, sx + dir * 0.09 * tw, sy + 0.05 * tw);
+    t.lineTo(co[0], co[1]); t.lineTo(ci[0], ci[1]); t.quadraticCurveTo((ci[0] + U[0]) / 2 + dir * 0.02 * tw, (ci[1] + U[1]) / 2, U[0], U[1]); t.closePath();
+    t.save(); t.fillStyle = t.createPattern(pc, 'repeat'); t.fill(); t.clip();
+    const g = t.createLinearGradient(sx, sy, co[0], co[1]); g.addColorStop(0, 'rgba(255,255,255,.10)'); g.addColorStop(0.6, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.18)'); t.fillStyle = g; t.fillRect(0, 0, W, H);
+    t.strokeStyle = 'rgba(0,0,0,.22)'; t.lineWidth = Math.max(4, tw * 0.03); t.beginPath(); t.moveTo(U[0], U[1]); t.lineTo(ci[0], ci[1]); t.stroke(); t.restore();
+    t.strokeStyle = 'rgba(0,0,0,.28)'; t.lineWidth = 1.5; t.stroke();
+  }
+  X.photo.drawImage(tmp, 0, 0);
+  const a = t.getImageData(0, 0, W, H).data; for (let i = 0; i < gmask.length; i++) if (a[i * 4 + 3] > 100) gmask[i] = 1;
+  drawMaskOv(); toast('Sleeves added from the garment\'s own fabric. Undo to remove them.');
+}
+$('gRedetect').onclick = () => detectGarment();
+$('gShow').onchange = (e) => { showMask = e.target.checked; drawMaskOv(); };
+$('gAdd').onclick = () => setTool('madd'); $('gRem').onclick = () => setTool('mrem');
+$('gApply').onclick = () => { if (!gmask) { toast('No garment selected yet.'); return; } commit(['photo']); recolourPhoto(gmask, existingColour(X.photo, gmask)); fillLog.push({ pattern: S.pattern, a: S.colA, b: lastGround }); toast('Applied to the whole garment. Pick a different colour or print to change it again.'); };
+$('gLen').oninput = (e) => { G.len = +e.target.value; $('gLenO').textContent = (G.len > 0 ? '+' : '') + G.len + '%'; };
+$('gLenApply').onclick = () => { if (G.len) changeLength(G.len); $('gLen').value = 0; G.len = 0; $('gLenO').textContent = '0%'; };
+$('gSleeveSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; G.sleeve = b.dataset.v; for (const x of $('gSleeveSeg').children) x.setAttribute('aria-pressed', x === b); });
+$('gSleeveAdd').onclick = () => addSleeves(G.sleeve);
 
 // ---------- init ----------
 setColA('#1c1f23'); S.recent = []; setColB('#ffffff');
