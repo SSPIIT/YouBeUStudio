@@ -167,6 +167,8 @@ button,input,select{font:inherit;color:inherit}
     <section class="sec">
       <h3>Fill <span style="font-weight:400">Fill tool: click inside a shape</span></h3>
       <div class="pts" id="patterns"></div>
+      <div class="lbl">Print background</div>
+      <div class="seg" id="groundSeg"><button data-v="keep" aria-pressed="true" title="Prints go on top of the colour that is already there">Keep current colour</button><button data-v="b" aria-pressed="false" title="Prints use the second colour as background">Use 2nd colour</button></div>
       <div class="row"><label for="pscale">Pattern size</label><input type="range" id="pscale" min="40" max="250" value="100"><output id="pscaleO">100</output></div>
       <div class="row"><label for="gap">Close gaps</label><input type="range" id="gap" min="0" max="10" value="3"><output id="gapO">3</output></div>
       <div class="row"><label for="tol">Photo match</label><input type="range" id="tol" min="5" max="120" value="38"><output id="tolO">38</output></div>
@@ -212,7 +214,7 @@ const X = Object.fromEntries(Object.entries(L).map(([k, c]) => [k, c.getContext(
 let z = 1; for (const k of ['photo', 'colour', 'floatC', 'lines', 'floatL', 'stroke', 'guide']) L[k].style.zIndex = z++;
 
 // ---------- state ----------
-const S = { tool: 'pen', colA: '#1c1f23', colB: '#ffffff', size: { pen: 4, paint: 28, eraser: 24 }, opac: { pen: 100, paint: 85, eraser: 100 }, smooth: 45, erase: 'both', pattern: 'solid', pscale: 100, gap: 3, tol: 38, mirror: false, recent: [], hasPhoto: false };
+const S = { ground: 'keep', tool: 'pen', colA: '#1c1f23', colB: '#ffffff', size: { pen: 4, paint: 28, eraser: 24 }, opac: { pen: 100, paint: 85, eraser: 100 }, smooth: 45, erase: 'both', pattern: 'solid', pscale: 100, gap: 3, tol: 38, mirror: false, recent: [], hasPhoto: false };
 const toast = (t) => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2600); };
 
 // ---------- icons + tool rail ----------
@@ -277,6 +279,7 @@ for (const [k] of outs) $(k).addEventListener('input', () => {
   if (k === 'pscale') { S.pscale = v; drawPatternPreviews(); }
   if (k === 'phOp') L.photo.style.opacity = v / 100;
 });
+$('groundSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; S.ground = b.dataset.v; for (const x of $('groundSeg').children) x.setAttribute('aria-pressed', x === b); });
 $('eraseSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; S.erase = b.dataset.v; for (const x of $('eraseSeg').children) x.setAttribute('aria-pressed', x === b); });
 
 // ---------- patterns ----------
@@ -407,7 +410,17 @@ function flood(sx, sy, ok) { const m = new Uint8Array(W * H), st = [sy * W + sx]
     if (y > 0 && !m[p - W] && ok(p - W)) { m[p - W] = 1; st.push(p - W); } if (y < H - 1 && !m[p + W] && ok(p + W)) { m[p + W] = 1; st.push(p + W); } }
   return { m, n, edge }; }
 function maskCanvas(m) { const c = document.createElement('canvas'); c.width = W; c.height = H; const cx = c.getContext('2d'), id = cx.createImageData(W, H); for (let i = 0; i < m.length; i++) if (m[i]) id.data[i * 4 + 3] = 255; cx.putImageData(id, 0, 0); return c; }
-function paintSource() { const c = document.createElement('canvas'); c.width = W; c.height = H; const cx = c.getContext('2d'); cx.fillStyle = S.pattern === 'solid' ? S.colA : cx.createPattern(tile(S.pattern, S.colA, S.colB, S.pscale), 'repeat'); cx.fillRect(0, 0, W, H); return c; }
+let lastGround = null;
+function paintSource(ground) { lastGround = ground || S.colB; const c = document.createElement('canvas'); c.width = W; c.height = H; const cx = c.getContext('2d'); cx.fillStyle = S.pattern === 'solid' ? S.colA : cx.createPattern(tile(S.pattern, S.colA, ground || S.colB, S.pscale), 'repeat'); cx.fillRect(0, 0, W, H); return c; }
+// the colour already inside a region (its most common colour), so a print can sit on top of it
+function existingColour(ctx, m) {
+  if (S.pattern === 'solid' || S.ground !== 'keep') return null;
+  const d = ctx.getImageData(0, 0, W, H).data, bins = new Map(); let n = 0, tot = 0;
+  for (let i = 0; i < m.length; i += 3) { if (!m[i]) continue; tot++; const o = i * 4; if (d[o + 3] < 200) continue; n++; const k = (d[o] >> 4) << 8 | (d[o + 1] >> 4) << 4 | (d[o + 2] >> 4); const b = bins.get(k) || [0, 0, 0, 0]; b[0] += d[o]; b[1] += d[o + 1]; b[2] += d[o + 2]; b[3]++; bins.set(k, b); }
+  if (!tot || n / tot < 0.3) return null; // mostly empty: nothing to keep
+  let best = null; for (const b of bins.values()) if (!best || b[3] > best[3]) best = b;
+  return '#' + [0, 1, 2].map(k => Math.round(best[k] / best[3]).toString(16).padStart(2, '0')).join('');
+}
 function doFill(x, y) {
   x = Math.max(0, Math.min(W - 1, Math.round(x))); y = Math.max(0, Math.min(H - 1, Math.round(y)));
   const t0 = performance.now();
@@ -424,8 +437,8 @@ function doFill(x, y) {
     let m = dil(lineRegion.m, S.gap + 2);
     for (let i = 0; i < m.length; i++) if (wall[i] && !lineRegion.m[i] && !m[i]) m[i] = 0; // keep under-line coverage from dilation only
     commit(['colour']);
-    const src = paintSource(), mk = maskCanvas(m), sc = src.getContext('2d'); sc.globalCompositeOperation = 'destination-in'; sc.drawImage(mk, 0, 0);
-    X.colour.drawImage(src, 0, 0); fillLog.push({ pattern: S.pattern, a: S.colA, b: S.colB });
+    const src = paintSource(existingColour(X.colour, lineRegion.m)), mk = maskCanvas(m), sc = src.getContext('2d'); sc.globalCompositeOperation = 'destination-in'; sc.drawImage(mk, 0, 0);
+    X.colour.drawImage(src, 0, 0); fillLog.push({ pattern: S.pattern, a: S.colA, b: lastGround });
     if (lineRegion.edge) toast('That area is open to the edge, so the background was filled. Undo, then close the outline or raise "Close gaps".');
   } else if (onPhoto) {
     const sr = pd[p0 * 4], sg = pd[p0 * 4 + 1], sb = pd[p0 * 4 + 2], tol2 = S.tol * S.tol * 3;
@@ -433,14 +446,14 @@ function doFill(x, y) {
     if (reg.n < 30) { toast('Nothing to fill there. Try raising "Photo match".'); return; }
     const m = dil(reg.m, 2);
     commit(['photo']);
-    recolourPhoto(m); fillLog.push({ pattern: S.pattern, a: S.colA, b: S.colB });
+    recolourPhoto(m, existingColour(X.photo, reg.m)); fillLog.push({ pattern: S.pattern, a: S.colA, b: lastGround });
   } else { toast(wallD[p0] ? 'You clicked on a line. Click inside the shape.' : 'Nothing to fill there.'); return; }
   $('stHint').textContent = `Filled in ${Math.round(performance.now() - t0)} ms`;
   refreshEmpty();
 }
-function recolourPhoto(m) {
+function recolourPhoto(m, ground) {
   const id = X.photo.getImageData(0, 0, W, H), d = id.data;
-  const src = paintSource().getContext('2d').getImageData(0, 0, W, H).data;
+  const src = paintSource(ground).getContext('2d').getImageData(0, 0, W, H).data;
   // keep the fabric's light and shadow: new = target colour × (pixel luminance / average luminance of the region)
   let sum = 0, n = 0; for (let i = 0; i < m.length; i++) if (m[i]) { sum += 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]; n++; }
   const avg = Math.max(30, sum / n);
