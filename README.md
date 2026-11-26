@@ -2,7 +2,9 @@
 
 Draw the outfit in your head, or edit a real dress photo. See it on a model, find similar products in real stores, and enter it in a weekly design challenge.
 
-**Try it:** https://youbeu.vercel.app
+**Try it:** https://youbeu.vercel.app · **Demo video (1 min):** https://youbeu.vercel.app/demo.mp4
+
+[![Watch the 1-minute demo](docs/demo-poster.jpg)](https://youbeu.vercel.app/demo.mp4)
 
 <table>
 <tr>
@@ -61,5 +63,6 @@ Each feature works on its own, so you only need the keys for the features you wa
 index.html        the app (built from src/)
 src/              studio UI and garment engine
 api/              find, detect, render, challenge, health (Vercel functions)
-docs/screenshots/ README images
+docs/             README images and video cover
+demo.mp4          1-minute demo video
 ```
