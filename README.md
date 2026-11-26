@@ -18,7 +18,7 @@ A browser sketchboard for fashion: draw a garment, fill it with colours and prin
 </tr>
 </table>
 
-**YouBeU** started as our team's Myntra HackerRamp project ("Sketch Your Style": draw what you want and find it). The full plan:
+**What's built and what's next:**
 
 1. **Sketchboard** (this): draw, fill, template, edit photos. ✅
 2. **Find it:** AI reads the design and finds real products on Myntra, Amazon, Flipkart, Meesho and AJIO that look like it. ✅
