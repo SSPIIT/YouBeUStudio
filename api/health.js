@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
   const out = { gemini_key_set: !!process.env.GEMINI_API_KEY, serpapi_key_set: !!process.env.SERPAPI_KEY };
   const gk = process.env.GEMINI_API_KEY, sk = process.env.SERPAPI_KEY;
   if (gk) {
-    const models = [process.env.GEMINI_MODEL, 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash'].filter(Boolean);
+    const models = [process.env.GEMINI_MODEL, 'gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'].filter(Boolean);
     out.gemini = { tried: [] };
     for (const m of models) {
       try {
@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
         const j = await r.json().catch(() => ({}));
         out.gemini.tried.push({ model: m, status: r.status, error: j.error?.message?.slice(0, 160) });
         if (r.ok) { out.gemini.ok = true; out.gemini.model = m; out.gemini.reply = (j.candidates?.[0]?.content?.parts?.[0]?.text || '').trim().slice(0, 20); break; }
-        if (r.status !== 404) break;
+        if (![404, 429, 500, 503].includes(r.status)) break;
       } catch (e) { out.gemini.tried.push({ model: m, error: String(e.message).slice(0, 160) }); break; }
     }
   }
