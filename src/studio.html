@@ -75,6 +75,24 @@ button,input,select{font:inherit;color:inherit}
 .empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:15;text-align:center;color:#8a9199;font-size:14px;padding:30px}
 .empty b{display:block;color:#3d434a;font-size:16px;margin-bottom:4px}
 .hidden{display:none!important}
+.finder{position:fixed;top:52px;right:0;bottom:30px;width:min(460px,100%);background:var(--chrome);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.08);z-index:40;overflow-y:auto;transform:translateX(105%);transition:transform .25s ease}
+.finder.open{transform:none}
+.fbar{display:flex;align-items:center;padding:8px 10px 8px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--chrome);z-index:2;font-size:15px}
+.fsec{padding:14px 16px;border-bottom:1px solid var(--line)}
+.fsend{display:flex;gap:14px;align-items:flex-start}.fsend img{width:84px;height:100px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px;flex:none}
+.fsteps{margin:0;padding-left:18px;font-size:13px;color:var(--soft);display:grid;gap:4px}.fsteps li.now{color:var(--ink);font-weight:600}.fsteps li.ok{color:var(--acc)}.fsteps li.ok::marker{content:"✓  "}.fsteps li.err{color:#b23a3a;list-style:none;margin-left:-18px;font-weight:500}
+.fan p{margin:12px 0 6px;font-size:14px}.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;font-size:13px}.kv div{display:contents}.kv span{color:var(--soft)}
+.fq{display:flex;gap:6px;margin-top:12px}.fq input{flex:1;height:34px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:var(--chrome);font-size:14px}
+.fstores{font-size:12px;color:var(--soft);margin-top:10px;line-height:1.9}.fstores a{color:var(--acc);margin-right:10px;font-weight:600;text-decoration:none;white-space:nowrap}
+.fres{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px 16px 24px}
+.fhead,.fnone{grid-column:1/-1;font-size:13px;color:var(--soft)}
+.fcard{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden;text-decoration:none;color:inherit;background:var(--chrome)}.fcard:hover{border-color:var(--acc)}
+.fimg{position:relative;aspect-ratio:3/4;background:#f3f4f5}.fimg img{width:100%;height:100%;object-fit:cover;display:block}
+.fscore{position:absolute;left:6px;top:6px;background:var(--acc);color:#fff;font-size:12px;font-weight:600;padding:2px 7px;border-radius:5px}
+.fbody{padding:8px 9px 10px;display:flex;flex-direction:column;gap:3px}.fstore{font-size:11px;font-weight:700;color:var(--soft)}
+.ftitle{font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.freason{font-size:12px;color:var(--soft);line-height:1.3}.fgo{font-size:12px;color:var(--acc);font-weight:600;margin-top:2px}
+@media(max-width:900px){.finder{top:0;bottom:0}}
 .selbox{position:absolute;border:1.5px solid var(--acc);box-shadow:0 0 0 1px rgba(255,255,255,.9);z-index:18;display:none;cursor:move}
 .selbox.marq{border-style:dashed;cursor:crosshair;background:rgba(15,110,104,.06)}
 .selbox i{position:absolute;width:12px;height:12px;background:#fff;border:1.5px solid var(--acc);border-radius:2px}
@@ -107,6 +125,7 @@ button,input,select{font:inherit;color:inherit}
     <input type="file" id="file" accept="image/*" class="hidden">
     <span class="grow"></span>
     <button class="tb" id="clearAll">Clear canvas</button>
+    <button class="tb pri" id="findBtn" title="Find real products that look like your design"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Find it</button>
   </header>
 
   <nav class="rail" id="rail" aria-label="Tools"></nav>
@@ -169,6 +188,13 @@ button,input,select{font:inherit;color:inherit}
     </section>
   </aside>
 
+  <aside class="finder" id="finder" aria-label="Find it results">
+    <div class="fbar"><b>Find it</b><span class="grow"></span><button class="ib" id="fClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="fsec"><div class="fsend"><img id="fPrev" alt="Your design as sent"><ol class="fsteps" id="fSteps"></ol></div><div id="fAnalysis" class="fan"></div>
+      <div class="fq"><input id="fQuery" aria-label="Search words" placeholder="Search words"><button class="tb" id="fAgain">Search again</button></div>
+      <div class="fstores" id="fStores"></div></div>
+    <div class="fres" id="fResults"></div>
+  </aside>
   <footer class="status"><span>Tool: <b id="stTool">Pen</b></span><span id="stHint"></span><span class="grow"></span><span>V select · B pen · P paint · E eraser · G fill · I picker · M mirror · [ ] size · X swap</span></footer>
 </div>
 
@@ -399,7 +425,7 @@ function doFill(x, y) {
     for (let i = 0; i < m.length; i++) if (wall[i] && !lineRegion.m[i] && !m[i]) m[i] = 0; // keep under-line coverage from dilation only
     commit(['colour']);
     const src = paintSource(), mk = maskCanvas(m), sc = src.getContext('2d'); sc.globalCompositeOperation = 'destination-in'; sc.drawImage(mk, 0, 0);
-    X.colour.drawImage(src, 0, 0);
+    X.colour.drawImage(src, 0, 0); fillLog.push({ pattern: S.pattern, a: S.colA, b: S.colB });
     if (lineRegion.edge) toast('That area is open to the edge, so the background was filled. Undo, then close the outline or raise "Close gaps".');
   } else if (onPhoto) {
     const sr = pd[p0 * 4], sg = pd[p0 * 4 + 1], sb = pd[p0 * 4 + 2], tol2 = S.tol * S.tol * 3;
@@ -407,7 +433,7 @@ function doFill(x, y) {
     if (reg.n < 30) { toast('Nothing to fill there. Try raising "Photo match".'); return; }
     const m = dil(reg.m, 2);
     commit(['photo']);
-    recolourPhoto(m);
+    recolourPhoto(m); fillLog.push({ pattern: S.pattern, a: S.colA, b: S.colB });
   } else { toast(wallD[p0] ? 'You clicked on a line. Click inside the shape.' : 'Nothing to fill there.'); return; }
   $('stHint').textContent = `Filled in ${Math.round(performance.now() - t0)} ms`;
   refreshEmpty();
@@ -606,6 +632,79 @@ function selUp() {
     for (let yy = y0; yy < y1; yy++) m.fill(1, yy * W + x0, yy * W + x1);
     liftMask(m);
   }
+}
+
+// ---------- Find it: sketch -> real products ----------
+const fillLog = [];
+const NAMED = [['black', '#1c1f23'], ['charcoal grey', '#4a4f57'], ['grey', '#8d939b'], ['light grey', '#d3d6da'], ['white', '#ffffff'], ['off-white', '#f3ead8'], ['beige', '#d8c3a5'], ['brown', '#a47551'], ['dark brown', '#5c3d2e'],
+  ['maroon', '#7a1f2b'], ['red', '#b3243a'], ['coral red', '#e2465a'], ['pink', '#f08aa6'], ['baby pink', '#f6c6d0'], ['orange', '#e86a33'], ['peach', '#f2a03d'], ['mustard', '#d9a21b'], ['yellow', '#f4dc6b'],
+  ['olive green', '#2f6b3f'], ['green', '#5b8c3a'], ['lime green', '#a7c46b'], ['teal', '#1f8a8a'], ['mint', '#7cc9c2'], ['navy blue', '#1f2f5c'], ['blue', '#2f5fb3'], ['sky blue', '#7fa6e8'], ['lavender', '#9b86d1']];
+function colourName(hex) { const [r, g, b] = hexRgb(hex); let best = NAMED[0][0], bd = 1e9; for (const [n, h] of NAMED) { const [R, G, B] = hexRgb(h); const d = (r - R) ** 2 * 2 + (g - G) ** 2 * 4 + (b - B) ** 2 * 3; if (d < bd) { bd = d; best = n; } } return best; }
+function hints() {
+  const used = fillLog.slice(-6).map(f => f.pattern === 'solid' ? { fill: 'solid', colour: colourName(f.a) } : { fill: PATTERNS[f.pattern].n.toLowerCase() + ' print', colour: colourName(f.a), background: colourName(f.b) });
+  return { source: S.hasPhoto ? 'edited photo of a real garment' : 'hand sketch / flat sketch', fills_applied: used, pen_colours: S.recent.slice(0, 4).map(colourName) };
+}
+function exportImage() {
+  dropSel();
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, W, H);
+  for (const k of ['photo', 'colour', 'lines']) if (L[k].style.visibility !== 'hidden') x.drawImage(L[k], 0, 0);
+  // crop to the drawing with a margin so the AI sees the garment large
+  const d = x.getImageData(0, 0, W, H).data; let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for (let y = 0; y < H; y += 2) for (let xx = 0; xx < W; xx += 2) { const o = (y * W + xx) * 4; if (d[o] < 245 || d[o + 1] < 245 || d[o + 2] < 245) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+  if (x1 < 0) return null;
+  const pad = 30; x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(W, x1 + pad); y1 = Math.min(H, y1 + pad);
+  const w = x1 - x0, h = y1 - y0, sc = Math.min(1, 768 / Math.max(w, h));
+  const o = document.createElement('canvas'); o.width = Math.round(w * sc); o.height = Math.round(h * sc);
+  const ox = o.getContext('2d'); ox.fillStyle = '#fff'; ox.fillRect(0, 0, o.width, o.height); ox.drawImage(c, x0, y0, w, h, 0, 0, o.width, o.height);
+  return o.toDataURL('image/jpeg', 0.9);
+}
+const STORE_SEARCH = {
+  Myntra: q => 'https://www.myntra.com/' + encodeURIComponent(q.trim().toLowerCase().replace(/\s+/g, '-')) + '?rawQuery=' + encodeURIComponent(q),
+  Amazon: q => 'https://www.amazon.in/s?k=' + encodeURIComponent(q),
+  Flipkart: q => 'https://www.flipkart.com/search?q=' + encodeURIComponent(q),
+  Meesho: q => 'https://www.meesho.com/search?q=' + encodeURIComponent(q),
+  AJIO: q => 'https://www.ajio.com/search/?text=' + encodeURIComponent(q),
+};
+const escH = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const safeUrl = (u) => /^https:\/\//.test(u || '') ? u : '#';
+let lastImg = null, lastAnalysis = null;
+$('findBtn').onclick = () => runFind();
+$('fClose').onclick = () => { $('finder').classList.remove('open'); };
+$('fAgain').onclick = () => { const q = $('fQuery').value.trim(); if (q && lastImg) runFind(q); };
+$('fQuery').addEventListener('keydown', e => { if (e.key === 'Enter') $('fAgain').click(); });
+function steps(i, txt) { $('fSteps').innerHTML = ['Reading your design', 'Searching Myntra, Amazon, Flipkart, Meesho, AJIO', 'Comparing how each product looks'].map((s, k) => `<li class="${k < i ? 'ok' : k === i ? 'now' : ''}">${s}</li>`).join('') + (txt ? `<li class="err">${escH(txt)}</li>` : ''); }
+function storeLinks(q) { $('fStores').innerHTML = q ? 'Also search the stores directly: ' + Object.entries(STORE_SEARCH).map(([n, f]) => `<a href="${f(q)}" target="_blank" rel="noopener">${n} ↗</a>`).join('') : ''; }
+async function runFind(query) {
+  const img = query ? lastImg : exportImage();
+  if (!img) { toast('Draw something or upload a photo first.'); return; }
+  lastImg = img;
+  $('finder').classList.add('open'); $('fPrev').src = img; $('fResults').innerHTML = ''; $('fAnalysis').innerHTML = ''; storeLinks(query || '');
+  steps(query ? 1 : 0);
+  let tick = query ? null : setTimeout(() => steps(1), 3500), tick2 = setTimeout(() => steps(2), query ? 3000 : 7000);
+  try {
+    const r = await fetch('api/find', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(query ? { image: img, query, analysis: lastAnalysis } : { image: img, hints: hints() }) });
+    const j = await r.json().catch(() => ({ error: 'The server sent an unexpected reply.' }));
+    clearTimeout(tick); clearTimeout(tick2);
+    if (!r.ok) { steps(-1, j.error || 'Search failed.'); if (lastAnalysis) storeLinks(lastAnalysis.search_query); return; }
+    steps(3); lastAnalysis = j.analysis; renderAnalysis(j.analysis); $('fQuery').value = j.query || ''; storeLinks(j.query);
+    renderResults(j.results || [], j.reranked);
+  } catch (e) {
+    clearTimeout(tick); clearTimeout(tick2);
+    steps(-1, location.protocol === 'file:' ? 'Find it needs the deployed site (it calls the search server). Open the Vercel link.' : 'Could not reach the search server. Check your connection.');
+  }
+}
+function renderAnalysis(a) {
+  const row = (k, v) => v && v !== 'n/a' && (!Array.isArray(v) || v.length) ? `<div><span>${k}</span><b>${escH(Array.isArray(v) ? v.join(', ') : v)}</b></div>` : '';
+  $('fAnalysis').innerHTML = (a.summary ? `<p>${escH(a.summary)}</p>` : '') + '<div class="kv">' + row('Garment', a.garment_type) + row('Colour', a.colors) + row('Pattern', a.pattern) + row('Sleeves', a.sleeve) + row('Neckline', a.neckline) + row('Length', a.length) + row('Silhouette', a.silhouette) + row('Details', a.details) + '</div>';
+}
+function renderResults(items, reranked) {
+  if (!items.length) { $('fResults').innerHTML = '<p class="fnone">No store products came back for this search. Edit the search words above and try again, or use the store links.</p>'; return; }
+  $('fResults').innerHTML = `<div class="fhead">${items.length} real products${reranked ? ', ranked by how closely they look like your design' : ''}</div>` + items.map(it => `
+    <a class="fcard" href="${safeUrl(it.link)}" target="_blank" rel="noopener">
+      <div class="fimg"><img src="${safeUrl(it.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">${it.score != null ? `<span class="fscore">${it.score}% match</span>` : ''}</div>
+      <div class="fbody"><span class="fstore">${escH(it.store)}</span><span class="ftitle">${escH(it.title)}</span>${it.reason ? `<span class="freason">${escH(it.reason)}</span>` : ''}<span class="fgo">View on ${escH(it.store)} ↗</span></div>
+    </a>`).join('');
 }
 
 // ---------- init ----------

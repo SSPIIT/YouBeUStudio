@@ -5,7 +5,7 @@ A browser sketchboard for fashion: draw a garment, fill it with colours and prin
 This is step 1 of **YouBeU**, which started as our team's Myntra HackerRamp project ("Sketch Your Style": draw what you want and find it). The full plan:
 
 1. **Sketchboard** (this): draw, fill, template, edit photos. ✅
-2. **Find it:** understand the sketch and match it to products.
+2. **Find it:** AI reads the design and finds real products on Myntra, Amazon, Flipkart, Meesho and AJIO that look like it. ✅
 3. **Request it:** when nothing matches, turn the sketch into a design request for tailors and sellers.
 4. **Weekly design challenges, badges and a leaderboard.**
 
@@ -20,9 +20,23 @@ This is step 1 of **YouBeU**, which started as our team's Myntra HackerRamp proj
 - **Layers** (lines, colour, photo) with show/hide, clearing and photo fade for tracing
 - **Undo/redo** and keyboard shortcuts: V select · B pen · P paint · E eraser · G fill · I picker · M mirror · [ ] size · X swap colours
 
+## Find it: how matching works
+
+1. **Read the design:** Gemini looks at the sketch or edited photo, plus facts the studio recorded (fill colours and prints used), and returns the garment type, colours, print, sleeves, neckline, length, silhouette, details and a shopper-style search query.
+2. **Search real stores:** a SerpAPI Google Images search restricted to myntra.com, amazon.in, flipkart.com, meesho.com and ajio.com returns real product pages and their photos. Category pages and other sites are filtered out.
+3. **Compare looks:** Gemini scores each product photo against the design (garment type 35%, cut and length 25%, colour 20%, print 15%, details 5%), so results are ranked by visual similarity, not just keywords.
+
+The API keys live only on the server (`api/find.js`), never in the page.
+
+## Deploy (Vercel, free)
+
+1. Import this repo at vercel.com (Add New → Project).
+2. Add environment variables `GEMINI_API_KEY` and `SERPAPI_KEY` (optional: `GEMINI_MODEL`).
+3. Deploy. The studio is at the root URL, and the search runs from `/api/find`.
+
 ## Run it
 
-Open `index.html` in any modern browser. That's it.
+Open `index.html` in any modern browser to use the studio. Find it needs the deployed backend.
 
 To change the code, edit `src/studio.html` (UI and tools) or `src/engine.js` (garment templates and sketch recognizer), then run `python3 build.py` to rebuild `index.html`.
 
