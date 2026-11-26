@@ -19,7 +19,7 @@ function storeOf(url) {
 }
 
 let goodModel = null; // remember which model name works so later calls skip the failures
-const MODELS = () => [goodModel, process.env.GEMINI_MODEL, 'gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'].filter((m, i, a) => m && a.indexOf(m) === i);
+const MODELS = () => [goodModel, process.env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-flash-lite-latest'].filter((m, i, a) => m && a.indexOf(m) === i);
 async function gemini(key, parts) {
   const errs = [];
   // Busy (503), rate-limited (429) or missing (404) models fall through to the next model; each gets one retry when busy.

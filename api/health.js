@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
   const out = { gemini_key_set: !!process.env.GEMINI_API_KEY, serpapi_key_set: !!process.env.SERPAPI_KEY };
   const gk = process.env.GEMINI_API_KEY, sk = process.env.SERPAPI_KEY;
   if (gk) {
-    const models = [process.env.GEMINI_MODEL, 'gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'].filter(Boolean);
+    const models = [process.env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-flash-lite-latest'].filter(Boolean);
     out.gemini = { tried: [] };
     for (const m of models) {
       try {
