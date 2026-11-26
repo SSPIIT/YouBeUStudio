@@ -6,15 +6,15 @@ A browser sketchboard for fashion: draw a garment, fill it with colours and prin
 
 <table>
 <tr>
-<td width="50%"><b>Sketch → AI model photo</b><br><img src="docs/screenshots/see-it-on-a-model.png" alt="A sketched top and jeans turned into a photo of a model wearing them"></td>
-<td width="50%"><b>Find it: real products ranked by how they look</b><br><img src="docs/screenshots/find-it.png" alt="A maroon floral top sketch matched to real Meesho and Amazon products"></td>
+<td width="50%"><b>Sketch → AI model photo</b><br><img src="docs/screenshots/see-it-on-a-model.png" alt="A sketched top and jeans turned into a photo of a model wearing them" width="100%"></td>
+<td width="50%"><b>Find it: real products ranked by how they look</b><br><img src="docs/screenshots/find-it.png" alt="A maroon floral top sketch matched to real Meesho and Amazon products" width="100%"></td>
 </tr>
+</table>
+<table>
 <tr>
-<td colspan="2"><b>Weekly design challenge: vote, AI stylist notes, leaderboard</b><br><img src="docs/screenshots/challenge.png" alt="Challenge gallery with model photos, original designs, stylist notes and votes"></td>
-</tr>
-<tr>
-<td width="50%"><b>Colours and 16 prints</b><br><img src="docs/screenshots/colours-and-prints.png" alt="Colour palette and pattern fills" width="300"></td>
-<td width="50%"><b>Editable garment templates</b><br><img src="docs/screenshots/templates.png" alt="Template options for sleeves, neckline, length and silhouette" width="280"></td>
+<td><b>Weekly challenge</b><br><img src="docs/screenshots/challenge.png" alt="Challenge gallery with model photos, original designs, stylist notes and votes" width="420"></td>
+<td><b>Colours and prints</b><br><img src="docs/screenshots/colours-and-prints.png" alt="Colour palette and pattern fills" width="130"></td>
+<td><b>Templates</b><br><img src="docs/screenshots/templates.png" alt="Template options for sleeves, neckline, length and silhouette" width="120"></td>
 </tr>
 </table>
 
