@@ -85,7 +85,31 @@ button,input,select{font:inherit;color:inherit}
 .mres img{width:100%;height:100%;object-fit:cover}
 .mwait{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:20px;font-size:14px;color:var(--soft)}.mwait small{font-size:12px}.mwait.err{color:#b23a3a}
 .spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--acc);animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
-.mopts .lbl:first-child{margin-top:0}.macts{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}.mnote{font-size:12px;color:var(--soft);margin:12px 0 0}
+.mopts .lbl:first-child{margin-top:0}
+.msub{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px}.msub input{width:100%;height:36px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:var(--chrome);font-size:14px}
+.cbox{width:min(1180px,100%);height:min(900px,100%);display:flex;flex-direction:column}.cbox .fbar{align-items:flex-start;padding-top:12px;padding-bottom:12px}
+.cbrief{font-size:13px;color:var(--soft);margin-top:2px}.cends{color:var(--acc);font-weight:600;margin-left:6px;white-space:nowrap}
+.ctabs{padding:10px 16px 0}.cbody{flex:1;overflow-y:auto;padding:14px 16px 24px}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.centry{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--chrome);display:flex;flex-direction:column}
+.cpics{position:relative;aspect-ratio:3/4;background:var(--chrome2)}.cphoto{width:100%;height:100%;object-fit:cover;display:block}
+.cdesign{position:absolute;left:8px;bottom:8px;width:30%;aspect-ratio:3/4;object-fit:contain;background:#fff;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.cinfo{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px;flex:1}.ctitle{font-weight:600;font-size:14px}.cby{font-size:12px;color:var(--soft)}
+.cyou{font-size:11px;background:var(--accSoft);color:var(--acc);padding:1px 6px;border-radius:4px;font-weight:600}
+.cnote{font-size:12px;line-height:1.4;color:var(--soft);background:var(--chrome2);padding:6px 8px;border-radius:6px;margin-top:2px}.cnote b{color:var(--ink);font-weight:600}
+.cacts{display:flex;gap:6px;margin-top:auto;padding-top:6px;align-items:center}.csm{height:32px;font-size:13px}
+.cvote{border:1px solid var(--line);background:none;border-radius:8px;height:32px;padding:0 12px;cursor:pointer;font-weight:600;font-size:14px}
+.cvote[aria-pressed=true]{background:#fde8ec;border-color:#e2465a;color:#b3243a}.cvote:disabled{opacity:.5;cursor:default}.cvotes{font-weight:600;font-size:14px}
+.cempty{text-align:center;color:var(--soft);padding:60px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;line-height:1.5}.cempty.err{color:#b23a3a}
+.chint,.crules{font-size:13px;color:var(--soft);margin-bottom:12px}.crules{margin-top:14px}
+.cscope{margin-bottom:12px}.cboard{width:100%;border-collapse:collapse;font-size:14px}.cboard th{text-align:left;font-size:12px;color:var(--soft);font-weight:600;padding:8px;border-bottom:1px solid var(--line)}
+.cboard td{padding:9px 8px;border-bottom:1px solid var(--line)}.cboard .n{text-align:right}.cboard tr.me td{background:var(--accSoft)}
+.chof{margin-bottom:22px}.chof h4,.cme h4{margin:4px 0 10px;font-size:15px}.chof h4 span{font-weight:400;color:var(--soft);font-size:13px;margin-left:6px}
+.cmehead{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:18px}.cmehead .fq input{width:200px}
+.cstat{display:flex;flex-direction:column;align-items:center;min-width:80px;padding:8px 12px;border:1px solid var(--line);border-radius:10px}.cstat b{font-size:22px}.cstat span{font-size:12px;color:var(--soft)}
+.cbadges{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px}
+.cbadge{border:1px dashed var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;opacity:.55;filter:grayscale(1)}
+.cbadge.on{opacity:1;filter:none;border-style:solid;border-color:var(--acc);background:var(--accSoft)}.cbadge span{font-size:26px}.cbadge b{font-size:13px}.cbadge small{font-size:11px;color:var(--soft)}.macts{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}.mnote{font-size:12px;color:var(--soft);margin:12px 0 0}
 @media(max-width:900px){.mgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.mopts{grid-column:1/-1}}
 .gstat{font-size:13px;line-height:1.4;margin-bottom:6px}.chk{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:4px;cursor:pointer}.chk input{accent-color:var(--acc)}
 .finder{position:fixed;top:52px;right:0;bottom:30px;width:min(460px,100%);background:var(--chrome);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.08);z-index:40;overflow-y:auto;transform:translateX(105%);transition:transform .25s ease}
@@ -138,6 +162,7 @@ button,input,select{font:inherit;color:inherit}
     <input type="file" id="file" accept="image/*" class="hidden">
     <span class="grow"></span>
     <button class="tb" id="clearAll">Clear canvas</button>
+    <button class="tb" id="chalBtn" title="Weekly design challenge, voting and leaderboard"><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Challenge</button>
     <button class="tb" id="modelBtn" title="AI photo of a model wearing your design"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><path d="M9 9h6l2 6h-3l1 7h-6l1-7H7z"/></svg>See it on a model</button>
     <button class="tb pri" id="findBtn" title="Find real products that look like your design"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Find it</button>
   </header>
@@ -236,10 +261,20 @@ button,input,select{font:inherit;color:inherit}
           <div class="lbl">Skin tone</div><div class="seg" data-k="skin"><button data-v="light" aria-pressed="false">Fair</button><button data-v="wheatish" aria-pressed="true">Wheatish</button><button data-v="medium" aria-pressed="false">Medium</button><button data-v="deep" aria-pressed="false">Deep</button></div>
           <div class="lbl">Pose</div><div class="seg" data-k="pose"><button data-v="front" aria-pressed="true">Front</button><button data-v="walk" aria-pressed="false">Walking</button><button data-v="three" aria-pressed="false">3/4 angle</button></div>
           <div class="lbl">Setting</div><div class="seg" data-k="setting"><button data-v="studio" aria-pressed="true">Studio</button><button data-v="street" aria-pressed="false">Street</button><button data-v="festive" aria-pressed="false">Festive</button><button data-v="garden" aria-pressed="false">Garden</button></div>
-          <div class="macts"><button class="tb pri" id="mGo">Create photo</button><button class="tb" id="mFind" disabled>Find it with this photo</button><button class="tb" id="mSave" disabled>Download</button></div>
+          <div class="macts"><button class="tb pri" id="mGo">Create photo</button><button class="tb" id="mSubmit" disabled>🏁 Submit to challenge</button><button class="tb" id="mFind" disabled>Find it with this photo</button><button class="tb" id="mSave" disabled>Download</button></div>
+          <div class="msub hidden" id="mSubForm"><div class="lbl">Title for your design</div><input id="mSubTitle" maxlength="60" placeholder="e.g. Rainy-day block print kurta">
+            <div id="mSubNameRow"><div class="lbl">Your nickname (shown on the leaderboard)</div><input id="mSubName" maxlength="24" placeholder="e.g. Swara"></div>
+            <div class="macts"><button class="tb pri" id="mSubGo">Submit</button><button class="tb" id="mSubCancel">Cancel</button></div></div>
           <p class="mnote">AI-generated preview. It follows your design's type, colours and print; small details can differ. Free images are limited per day.</p>
         </div>
       </div>
+    </div>
+  </div>
+  <div class="modal hidden" id="cModal" role="dialog" aria-label="Weekly challenge">
+    <div class="mbox cbox">
+      <div class="fbar"><div><b id="cTheme">Weekly challenge</b><div class="cbrief"><span id="cBrief"></span> <span class="cends" id="cEnds"></span></div></div><span class="grow"></span><button class="ib" id="cClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="seg ctabs" id="cTabs"><button data-t="week" aria-pressed="true">This week</button><button data-t="board" aria-pressed="false">Leaderboard</button><button data-t="hof" aria-pressed="false">Hall of Fame</button><button data-t="me" aria-pressed="false">My profile</button></div>
+      <div class="cbody" id="cBody"></div>
     </div>
   </div>
   <footer class="status"><span>Tool: <b id="stTool">Pen</b></span><span id="stHint"></span><span class="grow"></span><span>V select · B pen · P paint · E eraser · G fill · I picker · M mirror · [ ] size · X swap</span></footer>
@@ -1463,7 +1498,7 @@ function renderModel(state, msg) {
   else if (mPhoto) box.innerHTML = `<img src="${mPhoto}" alt="AI photo of a model wearing your design">`;
   else box.innerHTML = '<div class="mwait">Choose the model and setting, then click <b>Create photo</b>.</div>';
   $('mGo').textContent = mPhoto ? 'Create another' : 'Create photo';
-  $('mFind').disabled = $('mSave').disabled = !mPhoto;
+  $('mFind').disabled = $('mSave').disabled = $('mSubmit').disabled = !mPhoto;
 }
 $('mGo').onclick = async () => {
   if (!mDesign) return;
@@ -1481,6 +1516,103 @@ $('mGo').onclick = async () => {
 };
 $('mFind').onclick = () => { if (!mPhoto) return; $('mModal').classList.add('hidden'); runFind(undefined, mPhoto); };
 $('mSave').onclick = () => { if (!mPhoto) return; const a = document.createElement('a'); a.href = mPhoto; a.download = 'youbeu-design-on-model.jpg'; document.body.appendChild(a); a.click(); a.remove(); };
+
+// ---------- Weekly challenge: submit, vote, leaderboard, hall of fame, profile ----------
+const ME = (() => { let uid = null, name = ''; try { uid = localStorage.getItem('ybu_uid'); name = localStorage.getItem('ybu_name') || ''; } catch { }
+  if (!uid) { uid = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(36).padStart(2, '0')).join('').slice(0, 20); try { localStorage.setItem('ybu_uid', uid); } catch { } }
+  return { uid, name }; })();
+const setName = (n) => { ME.name = n; try { localStorage.setItem('ybu_name', n); } catch { } };
+const BADGE_ICON = { challenger: '🏁', voter: '⚖️', crowd: '❤️', streak: '🔥', star: '⭐', trend: '🥉', champ: '🏆' };
+let cTab = 'week', lbScope = 'week', cWeek = null, cdTimer = null;
+async function api(path, body) {
+  const r = await fetch('api/challenge' + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ uid: ME.uid, ...body }) } : {});
+  const j = await r.json().catch(() => ({ error: 'Unexpected reply from the server.' })); if (!r.ok) throw new Error(j.error || 'Request failed.'); return j;
+}
+$('chalBtn').onclick = () => openChallenge('week');
+$('cClose').onclick = () => { $('cModal').classList.add('hidden'); clearInterval(cdTimer); };
+$('cTabs').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (b) openChallenge(b.dataset.t); });
+function openChallenge(tab) {
+  cTab = tab; $('cModal').classList.remove('hidden');
+  for (const b of $('cTabs').children) b.setAttribute('aria-pressed', b.dataset.t === tab);
+  ({ week: loadWeek, board: loadBoard, hof: loadHof, me: loadMe })[tab]();
+}
+const cBody = (html) => { $('cBody').innerHTML = html; };
+const loading = () => cBody('<div class="cempty"><span class="spin"></span>Loading…</div>');
+const fail = (e) => cBody(`<div class="cempty err">${escH(e.message || e)}${/not connected/.test(e.message) ? '<br><small>The site owner still needs to connect the database in Vercel.</small>' : ''}</div>`);
+function countdown() {
+  if (!cWeek) return; const ms = cWeek.endsAt - Date.now(); if (ms <= 0) { $('cEnds').textContent = 'Ended: refresh for the new theme'; return; }
+  const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60; $('cEnds').textContent = `Ends in ${d ? d + 'd ' : ''}${h}h ${m}m`;
+}
+function headerFor(w) { cWeek = w; $('cTheme').textContent = w.theme; $('cBrief').textContent = w.brief; countdown(); clearInterval(cdTimer); cdTimer = setInterval(countdown, 30000); }
+function entryCard(e, opts = {}) {
+  return `<article class="centry" data-id="${escH(e.id)}">
+    <div class="cpics"><img class="cphoto" src="${escH(e.photo)}" alt="${escH(e.title)} on a model" loading="lazy"><img class="cdesign" src="${escH(e.design)}" alt="Original design" loading="lazy" title="Original design"></div>
+    <div class="cinfo"><div class="ctitle">${escH(e.title)}</div><div class="cby">by ${escH(e.name)}${e.mine ? ' <span class="cyou">you</span>' : ''}</div>
+    ${e.note ? `<div class="cnote"><b>Stylist${e.fit != null ? ` · ${e.fit}% theme fit` : ''}:</b> ${escH(e.note)}</div>` : ''}
+    <div class="cacts">${opts.noVote ? `<span class="cvotes">❤️ ${e.votes}</span>` : `<button class="cvote" data-vote="${escH(e.id)}" aria-pressed="${e.votedByMe}" ${e.mine ? 'disabled title="You can\'t vote for your own design"' : ''}>❤️ <span>${e.votes}</span></button>`}<button class="tb csm" data-find="${escH(e.id)}">Find it</button></div></div></article>`;
+}
+async function loadWeek() {
+  loading();
+  try {
+    const j = await api(`?a=week&uid=${ME.uid}`); headerFor(j.week);
+    if (j.me && j.me.name && j.me.name !== ME.name) setName(j.me.name);
+    cBody((j.entries.length ? `<div class="chint">${j.entries.length} ${j.entries.length === 1 ? 'entry' : 'entries'} · tap ❤️ to vote (you can't vote for your own) · most votes by Sunday night wins</div><div class="cgrid">${j.entries.map(e => entryCard(e)).join('')}</div>`
+      : `<div class="cempty">No entries yet this week. Be the first!<br><small>Design something, click <b>See it on a model</b>, create a photo, then <b>Submit to challenge</b>.</small></div>`));
+  } catch (e) { fail(e); }
+}
+$('cBody').addEventListener('click', async e => {
+  const v = e.target.closest('[data-vote]'), f = e.target.closest('[data-find]'), lb = e.target.closest('[data-scope]'), nm = e.target.closest('#cNameSave');
+  if (v && !v.disabled) {
+    v.disabled = true;
+    try { const j = await api('', { a: 'vote', id: v.dataset.vote }); v.setAttribute('aria-pressed', j.votedByMe); v.querySelector('span').textContent = j.votes; toast(j.votedByMe ? 'Vote counted. +1 point for you (up to 10 a day).' : 'Vote removed.'); }
+    catch (err) { toast(err.message); } finally { v.disabled = false; }
+  }
+  if (f) { const card = f.closest('.centry'), src = card.querySelector('.cphoto').src; const data = await scaleDataUrl(src, 768); if (data) { $('cModal').classList.add('hidden'); runFind(undefined, data); } }
+  if (lb) { lbScope = lb.dataset.scope; loadBoard(); }
+  if (nm) { const n = $('cNameIn').value.trim(); try { await api('', { a: 'name', name: n }); setName(n); toast('Nickname saved.'); loadMe(); } catch (err) { toast(err.message); } }
+});
+async function loadBoard() {
+  loading();
+  try {
+    const j = await api(`?a=leaderboard&scope=${lbScope}&uid=${ME.uid}`); headerFor(j.week);
+    const sw = `<div class="seg cscope"><button data-scope="week" aria-pressed="${lbScope === 'week'}">This week</button><button data-scope="all" aria-pressed="${lbScope === 'all'}">All time</button></div>`;
+    cBody(sw + (j.rows.length ? `<table class="cboard"><thead><tr><th>#</th><th>Designer</th><th class="n">Entries</th><th class="n">Points</th></tr></thead><tbody>${j.rows.map((r, i) => `<tr class="${r.me ? 'me' : ''}"><td>${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</td><td>${escH(r.name)}${r.me ? ' <span class="cyou">you</span>' : ''}</td><td class="n">${r.entries}</td><td class="n"><b>${r.points}</b></td></tr>`).join('')}</tbody></table>`
+      : '<div class="cempty">No points yet. Submit a design or vote to get on the board.</div>') +
+      '<div class="crules"><b>Points:</b> submit a design +20 · each vote you receive +5 · each vote you give +1 (up to 10 a day) · week winner +100 · 2nd and 3rd +50</div>');
+  } catch (e) { fail(e); }
+}
+async function loadHof() {
+  loading();
+  try {
+    const j = await api('?a=hof');
+    cBody(j.weeks.length ? j.weeks.map(w => `<section class="chof"><h4>${escH(w.theme)} <span>week of ${escH(w.week)}</span></h4><div class="cgrid">${w.winners.map(x => entryCard({ ...x, note: '', mine: false, title: ['🥇 ', '🥈 ', '🥉 '][x.place - 1] + x.title }, { noVote: true })).join('')}</div></section>`).join('')
+      : '<div class="cempty">The Hall of Fame fills up when the first weekly challenge ends (Sunday midnight, India time). The top 3 designs by votes are shown here.</div>');
+  } catch (e) { fail(e); }
+}
+async function loadMe() {
+  loading();
+  try {
+    const p = await api(`?a=me&uid=${ME.uid}`); if (p.name && p.name !== ME.name) setName(p.name);
+    cBody(`<div class="cme"><div class="cmehead"><div><div class="lbl" style="margin-top:0">Nickname</div><div class="fq" style="margin:0"><input id="cNameIn" maxlength="24" value="${escH(p.name || ME.name)}" placeholder="Your nickname"><button class="tb" id="cNameSave">Save</button></div></div>
+      <div class="cstat"><b>${p.points}</b><span>points</span></div><div class="cstat"><b>${p.stats.entries || 0}</b><span>entries</span></div><div class="cstat"><b>${p.streak}</b><span>week streak</span></div></div>
+      <h4>Badges</h4><div class="cbadges">${p.badges.map(b => `<div class="cbadge ${b.earned ? 'on' : ''}" title="${escH(b.how)}"><span>${BADGE_ICON[b.id]}</span><b>${escH(b.name)}</b><small>${b.earned ? 'Earned' : escH(b.how)}</small></div>`).join('')}</div>
+      <h4>Your entries</h4>${p.entries.length ? `<div class="cgrid">${p.entries.map(e => entryCard(e, { noVote: true })).join('')}</div>` : '<div class="cempty" style="padding:20px">No entries yet.</div>'}</div>`);
+  } catch (e) { fail(e); }
+}
+// submit from the model window
+$('mSubmit').onclick = () => { if (!mPhoto) return; $('mSubForm').classList.remove('hidden'); $('mSubName').value = ME.name; $('mSubNameRow').classList.toggle('hidden', !!ME.name); $('mSubTitle').focus(); };
+$('mSubCancel').onclick = () => $('mSubForm').classList.add('hidden');
+$('mSubGo').onclick = async () => {
+  const title = $('mSubTitle').value.trim(), name = ME.name || $('mSubName').value.trim();
+  if (!title) { toast('Give your design a title.'); return; } if (name.length < 2) { toast('Choose a nickname (at least 2 characters).'); return; }
+  $('mSubGo').disabled = true; $('mSubGo').textContent = 'Submitting…';
+  try {
+    const [photo, design] = await Promise.all([scaleDataUrl(mPhoto, 720), scaleDataUrl(mDesign, 360)]);
+    await api('', { a: 'submit', title, name, photo, design }); setName(name);
+    $('mSubForm').classList.add('hidden'); $('mSubTitle').value = ''; $('mModal').classList.add('hidden');
+    toast('Submitted! +20 points. Share the link so friends can vote.'); openChallenge('week');
+  } catch (e) { toast(e.message); } finally { $('mSubGo').disabled = false; $('mSubGo').textContent = 'Submit'; }
+};
 
 // ---------- init ----------
 setColA('#1c1f23'); S.recent = []; setColB('#ffffff');

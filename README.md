@@ -7,7 +7,7 @@ This is step 1 of **YouBeU**, which started as our team's Myntra HackerRamp proj
 1. **Sketchboard** (this): draw, fill, template, edit photos. ✅
 2. **Find it:** AI reads the design and finds real products on Myntra, Amazon, Flipkart, Meesho and AJIO that look like it. ✅
 3. **Request it:** when nothing matches, turn the sketch into a design request for tailors and sellers.
-4. **Weekly design challenges, badges and a leaderboard.**
+4. **Weekly design challenges:** submit your model photo, vote, earn points and badges, leaderboard and Hall of Fame. ✅
 
 ## Features
 
@@ -23,6 +23,14 @@ This is step 1 of **YouBeU**, which started as our team's Myntra HackerRamp proj
 ## See it on a model
 
 Click **See it on a model** to turn any design into a realistic photo of a model wearing it. You choose the model (woman or man), skin tone, pose and setting. Gemini studies the design and writes a precise garment brief, then FLUX.2 on Cloudflare Workers AI generates the photo using the design itself as a reference image (free daily allowance). The photo can be downloaded or used directly for **Find it**.
+
+## Weekly challenge
+
+A new theme every Monday (India time). After creating a model photo, **Submit to challenge** enters it with the original design. The **Challenge** window has four tabs: this week's gallery with voting (one vote per person per entry, no self-votes, votes can be taken back), the leaderboard (this week and all time), the Hall of Fame (top 3 of each finished week, worked out automatically) and your profile with points and badges. Gemini adds a short stylist note and a theme-fit score to each entry.
+
+Points: submit +20 · each vote received +5 · each vote given +1 (up to 10 a day) · week winner +100 · 2nd and 3rd +50.
+Badges: Challenger, Fair Judge, Crowd Favourite, On a Roll, Rising Star, Trendsetter, Champion.
+Storage: Upstash Redis through Vercel's integration (`KV_REST_API_URL`, `KV_REST_API_TOKEN`). Nicknames are kept on the device, with no login.
 
 ## Find it: how matching works
 
