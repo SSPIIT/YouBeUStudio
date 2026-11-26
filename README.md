@@ -20,6 +20,10 @@ This is step 1 of **YouBeU**, which started as our team's Myntra HackerRamp proj
 - **Layers** (lines, colour, photo) with show/hide, clearing and photo fade for tracing
 - **Undo/redo** and keyboard shortcuts: V select · B pen · P paint · E eraser · G fill · I picker · M mirror · [ ] size · X swap colours
 
+## See it on a model
+
+Click **See it on a model** to turn any design into a realistic photo of a model wearing it. You choose the model (woman or man), skin tone, pose and setting. Gemini studies the design and writes a precise garment brief, then FLUX.2 on Cloudflare Workers AI generates the photo using the design itself as a reference image (free daily allowance). The photo can be downloaded or used directly for **Find it**.
+
 ## Find it: how matching works
 
 1. **Read the design:** Gemini looks at the sketch or edited photo, plus facts the studio recorded (fill colours and prints used), and returns the garment type, colours, print, sleeves, neckline, length, silhouette, details and a shopper-style search query.
@@ -31,7 +35,7 @@ The API keys live only on the server (`api/find.js`), never in the page.
 ## Deploy (Vercel, free)
 
 1. Import this repo at vercel.com (Add New → Project).
-2. Add environment variables `GEMINI_API_KEY` and `SERPAPI_KEY` (optional: `GEMINI_MODEL`).
+2. Add environment variables `GEMINI_API_KEY`, `SERPAPI_KEY`, `CF_ACCOUNT_ID` and `CF_API_TOKEN` (Cloudflare Workers AI token; optional: `GEMINI_MODEL`).
 3. Deploy. The studio is at the root URL, and the search runs from `/api/find`.
 
 ## Run it

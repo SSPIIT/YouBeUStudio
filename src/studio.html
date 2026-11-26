@@ -75,6 +75,18 @@ button,input,select{font:inherit;color:inherit}
 .empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:15;text-align:center;color:#8a9199;font-size:14px;padding:30px}
 .empty b{display:block;color:#3d434a;font-size:16px;margin-bottom:4px}
 .hidden{display:none!important}
+.modal{position:fixed;inset:0;background:rgba(10,12,14,.55);z-index:60;display:grid;place-items:center;padding:16px}
+.mbox{background:var(--chrome);border-radius:14px;width:min(1040px,100%);max-height:100%;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.mbox .fbar{border-radius:14px 14px 0 0}
+.mgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.1fr);gap:16px;padding:16px}
+.mgrid figure{margin:0;display:flex;flex-direction:column;gap:6px}.mgrid figcaption{font-size:12px;color:var(--soft);text-align:center}
+#mDesign{width:100%;aspect-ratio:3/4;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:8px}
+.mres{width:100%;aspect-ratio:3/4;background:var(--chrome2);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:grid;place-items:center}
+.mres img{width:100%;height:100%;object-fit:cover}
+.mwait{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:20px;font-size:14px;color:var(--soft)}.mwait small{font-size:12px}.mwait.err{color:#b23a3a}
+.spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--acc);animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.mopts .lbl:first-child{margin-top:0}.macts{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}.mnote{font-size:12px;color:var(--soft);margin:12px 0 0}
+@media(max-width:900px){.mgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.mopts{grid-column:1/-1}}
 .gstat{font-size:13px;line-height:1.4;margin-bottom:6px}.chk{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:4px;cursor:pointer}.chk input{accent-color:var(--acc)}
 .finder{position:fixed;top:52px;right:0;bottom:30px;width:min(460px,100%);background:var(--chrome);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.08);z-index:40;overflow-y:auto;transform:translateX(105%);transition:transform .25s ease}
 .finder.open{transform:none}
@@ -126,6 +138,7 @@ button,input,select{font:inherit;color:inherit}
     <input type="file" id="file" accept="image/*" class="hidden">
     <span class="grow"></span>
     <button class="tb" id="clearAll">Clear canvas</button>
+    <button class="tb" id="modelBtn" title="AI photo of a model wearing your design"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><path d="M9 9h6l2 6h-3l1 7h-6l1-7H7z"/></svg>See it on a model</button>
     <button class="tb pri" id="findBtn" title="Find real products that look like your design"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Find it</button>
   </header>
 
@@ -212,6 +225,23 @@ button,input,select{font:inherit;color:inherit}
       <div class="fstores" id="fStores"></div></div>
     <div class="fres" id="fResults"></div>
   </aside>
+  <div class="modal hidden" id="mModal" role="dialog" aria-label="See it on a model">
+    <div class="mbox">
+      <div class="fbar"><b>See it on a model</b><span class="grow"></span><button class="ib" id="mClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="mgrid">
+        <figure><img id="mDesign" alt="Your design"><figcaption>Your design</figcaption></figure>
+        <figure><div class="mres" id="mResult"></div><figcaption>AI photo</figcaption></figure>
+        <div class="mopts" id="mOpts">
+          <div class="lbl">Model</div><div class="seg" data-k="model"><button data-v="woman" aria-pressed="true">Woman</button><button data-v="man" aria-pressed="false">Man</button></div>
+          <div class="lbl">Skin tone</div><div class="seg" data-k="skin"><button data-v="light" aria-pressed="false">Fair</button><button data-v="wheatish" aria-pressed="true">Wheatish</button><button data-v="medium" aria-pressed="false">Medium</button><button data-v="deep" aria-pressed="false">Deep</button></div>
+          <div class="lbl">Pose</div><div class="seg" data-k="pose"><button data-v="front" aria-pressed="true">Front</button><button data-v="walk" aria-pressed="false">Walking</button><button data-v="three" aria-pressed="false">3/4 angle</button></div>
+          <div class="lbl">Setting</div><div class="seg" data-k="setting"><button data-v="studio" aria-pressed="true">Studio</button><button data-v="street" aria-pressed="false">Street</button><button data-v="festive" aria-pressed="false">Festive</button><button data-v="garden" aria-pressed="false">Garden</button></div>
+          <div class="macts"><button class="tb pri" id="mGo">Create photo</button><button class="tb" id="mFind" disabled>Find it with this photo</button><button class="tb" id="mSave" disabled>Download</button></div>
+          <p class="mnote">AI-generated preview. It follows your design's type, colours and print; small details can differ. Free images are limited per day.</p>
+        </div>
+      </div>
+    </div>
+  </div>
   <footer class="status"><span>Tool: <b id="stTool">Pen</b></span><span id="stHint"></span><span class="grow"></span><span>V select · B pen · P paint · E eraser · G fill · I picker · M mirror · [ ] size · X swap</span></footer>
 </div>
 
@@ -715,8 +745,8 @@ $('fAgain').onclick = () => { const q = $('fQuery').value.trim(); if (q && lastI
 $('fQuery').addEventListener('keydown', e => { if (e.key === 'Enter') $('fAgain').click(); });
 function steps(i, txt) { $('fSteps').innerHTML = ['Reading your design', 'Searching Myntra, Amazon, Flipkart, Meesho, AJIO', 'Comparing how each product looks'].map((s, k) => `<li class="${k < i ? 'ok' : k === i ? 'now' : ''}">${s}</li>`).join('') + (txt ? `<li class="err">${escH(txt)}</li>` : ''); }
 function storeLinks(q) { $('fStores').innerHTML = q ? 'Also search the stores directly: ' + Object.entries(STORE_SEARCH).map(([n, f]) => `<a href="${f(q)}" target="_blank" rel="noopener">${n} ↗</a>`).join('') : ''; }
-async function runFind(query) {
-  const img = query ? lastImg : exportImage();
+async function runFind(query, override) {
+  const img = query ? lastImg : (override || exportImage());
   if (!img) { toast('Draw something or upload a photo first.'); return; }
   lastImg = img;
   $('finder').classList.add('open'); $('fPrev').src = img; $('fResults').innerHTML = ''; if (!query) { $('fAnalysis').innerHTML = ''; $('fqWrap').classList.add('hidden'); $('fQuery').value = ''; } storeLinks(query || ''); $('fAgain').disabled = true;
@@ -940,6 +970,44 @@ $('gLen').oninput = (e) => { G.len = +e.target.value; $('gLenO').textContent = (
 $('gLenApply').onclick = () => { if (G.len) changeLength(G.len); $('gLen').value = 0; G.len = 0; $('gLenO').textContent = '0%'; };
 $('gSleeveSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; G.sleeve = b.dataset.v; for (const x of $('gSleeveSeg').children) x.setAttribute('aria-pressed', x === b); });
 $('gSleeveAdd').onclick = () => addSleeves(G.sleeve);
+
+// ---------- See it on a model ----------
+const MO = { model: 'woman', skin: 'wheatish', pose: 'front', setting: 'studio' };
+let mDesign = null, mDesc = null, mPhoto = null;
+function scaleDataUrl(url, max) { return new Promise(res => { const im = new Image(); im.onload = () => { const k = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', 0.9)); }; im.onerror = () => res(null); im.src = url; }); }
+$('modelBtn').onclick = () => {
+  const img = exportImage(); if (!img) { toast('Draw something or upload a photo first.'); return; }
+  if (img !== mDesign) { mDesign = img; mDesc = null; mPhoto = null; }
+  $('mDesign').src = img; $('mModal').classList.remove('hidden'); renderModel();
+};
+$('mClose').onclick = () => $('mModal').classList.add('hidden');
+$('mModal').addEventListener('click', e => { if (e.target.id === 'mModal') $('mModal').classList.add('hidden'); });
+$('mOpts').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; const k = b.parentElement.dataset.k; MO[k] = b.dataset.v; for (const x of b.parentElement.children) x.setAttribute('aria-pressed', x === b); });
+function renderModel(state, msg) {
+  const box = $('mResult');
+  if (state === 'busy') box.innerHTML = `<div class="mwait"><span class="spin"></span>${escH(msg || 'Creating the photo…')}<small>Usually 5–20 seconds</small></div>`;
+  else if (state === 'err') box.innerHTML = `<div class="mwait err">${escH(msg)}</div>`;
+  else if (mPhoto) box.innerHTML = `<img src="${mPhoto}" alt="AI photo of a model wearing your design">`;
+  else box.innerHTML = '<div class="mwait">Choose the model and setting, then click <b>Create photo</b>.</div>';
+  $('mGo').textContent = mPhoto ? 'Create another' : 'Create photo';
+  $('mFind').disabled = $('mSave').disabled = !mPhoto;
+}
+$('mGo').onclick = async () => {
+  if (!mDesign) return;
+  $('mGo').disabled = true; renderModel('busy', mDesc ? 'Creating the photo…' : 'Studying your design…');
+  const t = !mDesc && setTimeout(() => renderModel('busy', 'Creating the photo…'), 4000);
+  try {
+    const [img, ref] = await Promise.all([scaleDataUrl(mDesign, 768), scaleDataUrl(mDesign, 512)]);
+    const ctl = new AbortController(), killer = setTimeout(() => ctl.abort(), 90000);
+    const r = await fetch('api/render', { signal: ctl.signal, method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ image: img, ref, hints: hints(), options: MO, desc: mDesc }) });
+    clearTimeout(killer); const j = await r.json().catch(() => ({ error: 'The server sent an unexpected reply.' }));
+    if (!r.ok) { renderModel('err', j.error || 'Could not create the photo.'); return; }
+    mDesc = j.desc; mPhoto = j.image; renderModel();
+  } catch (e) { renderModel('err', e.name === 'AbortError' ? 'This is taking too long. Please try again.' : (location.protocol === 'file:' ? 'This needs the deployed site (it calls the image server).' : 'Could not reach the image server.')); }
+  finally { clearTimeout(t); $('mGo').disabled = false; }
+};
+$('mFind').onclick = () => { if (!mPhoto) return; $('mModal').classList.add('hidden'); runFind(undefined, mPhoto); };
+$('mSave').onclick = () => { if (!mPhoto) return; const a = document.createElement('a'); a.href = mPhoto; a.download = 'youbeu-design-on-model.jpg'; document.body.appendChild(a); a.click(); a.remove(); };
 
 // ---------- init ----------
 setColA('#1c1f23'); S.recent = []; setColB('#ffffff');
