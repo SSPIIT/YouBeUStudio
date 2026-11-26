@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YouBeU Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a calm, precise design tool. Professional, never toy-like.
+   IDEA: a designer's studio desk: paper in the middle, tools at hand, properties at the side.
+   PICTURE: the paper canvas itself, large, with a garment flat sketch on it.
+   COLOUR and TYPE: neutral graphite chrome, white paper, one deep teal accent; Inter throughout.
+   LAYOUT: top bar; left tool rail; centre canvas; right properties panel. Stacks on phones. */
+:root{color-scheme:light dark;
+ --bg:light-dark(#eceef0,#141618);--chrome:light-dark(#ffffff,#1d2023);--chrome2:light-dark(#f6f7f8,#24282c);
+ --ink:light-dark(#16191c,#e8eaec);--soft:light-dark(#646b73,#9aa2aa);--line:light-dark(#dde1e5,#2f343a);
+ --acc:light-dark(#0f6e68,#3cc4b8);--accSoft:light-dark(#e1f1ef,#163532);--paper:#ffffff}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,system-ui,sans-serif;overflow-x:clip}
+button,input,select{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:56px minmax(0,1fr) 300px;grid-template-rows:52px minmax(0,1fr) 30px;height:100vh;min-height:620px}
+.top{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--chrome);border-bottom:1px solid var(--line)}
+.brand{font-weight:700;font-size:15px;letter-spacing:-.01em;margin-right:6px;white-space:nowrap}.brand span{color:var(--acc)}
+.sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+.ib{width:38px;height:38px;display:grid;place-items:center;border-radius:8px;border:1px solid transparent;background:none;cursor:pointer;flex:none}
+.ib:hover{background:var(--chrome2)}.ib[aria-pressed=true]{background:var(--accSoft);border-color:var(--acc);color:var(--acc)}
+.ib:disabled{opacity:.35;cursor:default}
+.ib svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tb{height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--chrome);cursor:pointer;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.tb:hover{border-color:var(--soft)}.tb.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.tb svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.grow{flex:1}
+.rail{background:var(--chrome);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0}
+.stagewrap{position:relative;display:grid;place-items:center;padding:18px;overflow:hidden}
+.stage{position:relative;aspect-ratio:5/6;height:100%;max-width:100%;background:var(--paper);border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.12),0 8px 30px rgba(0,0,0,.08);touch-action:none;cursor:none}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:4px}
+.cursor{position:absolute;pointer-events:none;border:1px solid rgba(0,0,0,.7);box-shadow:0 0 0 1px rgba(255,255,255,.8);border-radius:50%;transform:translate(-50%,-50%);display:none;z-index:20}
+.cross{position:absolute;pointer-events:none;width:22px;height:22px;transform:translate(-4px,-19px);display:none;z-index:20}
+.mirrorline{position:absolute;top:0;bottom:0;left:50%;border-left:1px dashed rgba(15,110,104,.55);pointer-events:none;display:none;z-index:19}
+.panel{background:var(--chrome);border-left:1px solid var(--line);overflow-y:auto}
+.sec{padding:14px 14px 16px;border-bottom:1px solid var(--line)}
+.sec h3{margin:0 0 10px;font-size:12px;font-weight:600;color:var(--soft);display:flex;justify-content:space-between;align-items:center}
+.row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.row label{width:74px;color:var(--soft);font-size:13px;flex:none}
+.row input[type=range]{flex:1;accent-color:var(--acc)}
+.row output{width:34px;text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+.cur{display:flex;align-items:center;gap:10px}
+.chipc{position:relative;width:44px;height:44px;flex:none}
+.chipc .a,.chipc .b{position:absolute;width:30px;height:30px;border-radius:6px;border:1px solid var(--line);cursor:pointer;padding:0}
+.chipc .a{left:0;top:0;z-index:2;box-shadow:0 0 0 2px var(--chrome)}.chipc .b{right:0;bottom:0}
+.hex{font-variant-numeric:tabular-nums;font-size:13px;color:var(--soft)}
+.sw{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px;margin-top:10px}
+.sw button{aspect-ratio:1;border-radius:5px;border:1px solid rgba(0,0,0,.12);cursor:pointer;padding:0}
+.sw button:focus-visible,.pt:focus-visible,.ib:focus-visible,.tb:focus-visible,.seg button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.recent{display:flex;gap:5px;margin-top:8px;min-height:18px}.recent button{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.12);padding:0;cursor:pointer}
+.pts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.pt{border:1px solid var(--line);border-radius:7px;background:none;padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--soft)}
+.pt canvas{width:100%;aspect-ratio:1;border-radius:4px;display:block}
+.pt[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc);color:var(--ink)}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;min-height:32px}
+.seg button[aria-pressed=true]{background:var(--accSoft);border-color:var(--acc);color:var(--acc);font-weight:600}
+.lbl{font-size:12px;color:var(--soft);margin:10px 0 5px}
+.layer{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.layer:first-of-type{border-top:0}.layer span{flex:1}
+.layer .ib{width:30px;height:30px}.layer .ib svg{width:16px;height:16px}
+.status{grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 12px;background:var(--chrome);border-top:1px solid var(--line);font-size:12px;color:var(--soft);white-space:nowrap;overflow:hidden}
+.status b{color:var(--ink);font-weight:600}
+.toast{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:#16191c;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30;max-width:90%;text-align:center}
+.toast.on{opacity:1}
+.drop{position:absolute;inset:18px;border:2px dashed var(--acc);border-radius:8px;background:color-mix(in srgb,var(--acc) 8%,transparent);display:none;place-items:center;font-weight:600;color:var(--acc);z-index:25;pointer-events:none}
+.empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:15;text-align:center;color:#8a9199;font-size:14px;padding:30px}
+.empty b{display:block;color:#3d434a;font-size:16px;margin-bottom:4px}
+.hidden{display:none!important}
+.selbox{position:absolute;border:1.5px solid var(--acc);box-shadow:0 0 0 1px rgba(255,255,255,.9);z-index:18;display:none;cursor:move}
+.selbox.marq{border-style:dashed;cursor:crosshair;background:rgba(15,110,104,.06)}
+.selbox i{position:absolute;width:12px;height:12px;background:#fff;border:1.5px solid var(--acc);border-radius:2px}
+.selbox.marq i{display:none}
+.selbox i[data-h=nw]{left:-7px;top:-7px;cursor:nwse-resize}.selbox i[data-h=ne]{right:-7px;top:-7px;cursor:nesw-resize}
+.selbox i[data-h=sw]{left:-7px;bottom:-7px;cursor:nesw-resize}.selbox i[data-h=se]{right:-7px;bottom:-7px;cursor:nwse-resize}
+.selbar{position:absolute;z-index:22;display:none;gap:2px;padding:3px;background:var(--chrome);border:1px solid var(--line);border-radius:9px;box-shadow:0 4px 14px rgba(0,0,0,.14);transform:translate(-50%,-100%);white-space:nowrap}
+.selbar button{border:0;background:none;padding:6px 9px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink)}
+.selbar button:hover{background:var(--chrome2)}.selbar .done{background:var(--acc);color:#fff}.selbar .done:hover{background:var(--acc)}
+@media(max-width:900px){
+ .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(420px,70vh) auto auto;height:auto}
+ .top{flex-wrap:wrap;padding:8px 10px;gap:6px}.top .sep{display:none}
+ .rail{flex-direction:row;flex-wrap:wrap;justify-content:center;border-right:0;border-bottom:1px solid var(--line);padding:6px}
+ .stage{height:auto;width:100%;max-height:100%}
+ .panel{border-left:0;border-top:1px solid var(--line)}
+ .status{display:none}
+}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">YouBeU <span>Studio</span></div>
+    <div class="sep"></div>
+    <button class="ib" id="undo" title="Undo (Ctrl+Z)" aria-label="Undo" disabled><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+    <button class="ib" id="redo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+    <div class="sep"></div>
+    <button class="tb" id="upBtn" title="Upload a photo of a garment to edit"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Upload photo</button>
+    <input type="file" id="file" accept="image/*" class="hidden">
+    <span class="grow"></span>
+    <button class="tb" id="clearAll">Clear canvas</button>
+  </header>
+
+  <nav class="rail" id="rail" aria-label="Tools"></nav>
+
+  <div class="stagewrap" id="wrap">
+    <div class="stage" id="stage">
+      <canvas id="cPhoto"></canvas><canvas id="cColour"></canvas><canvas id="cFloatC"></canvas><canvas id="cLines"></canvas><canvas id="cFloatL"></canvas><canvas id="cStroke"></canvas><canvas id="cGuide"></canvas>
+      <div class="mirrorline" id="mline"></div><div class="selbox" id="selbox"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div><div class="selbar" id="selbar"><button data-a="dup">Duplicate</button><button data-a="flip">Flip</button><button data-a="del">Delete</button><button data-a="done" class="done">Done</button></div>
+      <div class="cursor" id="cursor"></div>
+      <svg class="cross" id="cross" viewBox="0 0 24 24"></svg>
+      <div class="empty" id="empty"><div><b>Start with a template, upload a photo, or just draw</b>Templates are in the side panel. You can also drop an image here.</div></div>
+    </div>
+    <div class="drop" id="drop">Drop the photo to edit it</div>
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+
+  <aside class="panel" aria-label="Properties">
+    <section class="sec">
+      <h3>Colour</h3>
+      <div class="cur">
+        <div class="chipc"><button class="a" id="cA" title="Main colour (click to pick)" aria-label="Main colour"></button><button class="b" id="cB" title="Pattern background colour (click to pick)" aria-label="Pattern background colour"></button></div>
+        <div><div class="hex" id="hexA"></div><div class="hex" id="hexB" style="font-size:12px"></div></div>
+        <span class="grow"></span>
+        <button class="ib" id="swap" title="Swap colours (X)" aria-label="Swap colours"><svg viewBox="0 0 24 24"><path d="M7 4 3 8l4 4"/><path d="M3 8h13a4 4 0 0 1 4 4"/><path d="m17 20 4-4-4-4"/><path d="M21 16H8a4 4 0 0 1-4-4"/></svg></button>
+        <input type="color" id="pickA" class="hidden"><input type="color" id="pickB" class="hidden">
+      </div>
+      <div class="sw" id="swatches"></div>
+      <div class="lbl">Recent</div><div class="recent" id="recent"></div>
+    </section>
+
+    <section class="sec" id="secBrush">
+      <h3 id="brushTitle">Pen</h3>
+      <div class="row"><label for="size">Size</label><input type="range" id="size" min="1" max="80" value="4"><output id="sizeO">4</output></div>
+      <div class="row"><label for="opac">Opacity</label><input type="range" id="opac" min="5" max="100" value="100"><output id="opacO">100</output></div>
+      <div class="row"><label for="smooth">Smoothing</label><input type="range" id="smooth" min="0" max="90" value="45"><output id="smoothO">45</output></div>
+      <div class="row" id="eraseRow"><label>Erases</label><div class="seg" id="eraseSeg"><button data-v="both" aria-pressed="true">Both</button><button data-v="lines" aria-pressed="false">Lines</button><button data-v="colour" aria-pressed="false">Colour</button><button data-v="photo" aria-pressed="false">Photo</button></div></div>
+    </section>
+
+    <section class="sec">
+      <h3>Fill <span style="font-weight:400">Fill tool: click inside a shape</span></h3>
+      <div class="pts" id="patterns"></div>
+      <div class="row"><label for="pscale">Pattern size</label><input type="range" id="pscale" min="40" max="250" value="100"><output id="pscaleO">100</output></div>
+      <div class="row"><label for="gap">Close gaps</label><input type="range" id="gap" min="0" max="10" value="3"><output id="gapO">3</output></div>
+      <div class="row"><label for="tol">Photo match</label><input type="range" id="tol" min="5" max="120" value="38"><output id="tolO">38</output></div>
+      <div class="lbl">On photos, the fill keeps the fabric's folds and shading.</div>
+    </section>
+
+    <section class="sec">
+      <h3>Templates <span style="font-weight:400">editable flat sketches</span></h3>
+      <div class="seg" id="tCat"></div>
+      <div id="tOpts"></div>
+      <div class="row" style="margin-top:12px;gap:6px"><button class="tb pri" id="tPlace">Place on canvas</button><button class="tb" id="tGuide" aria-pressed="false">Show as tracing guide</button></div>
+      <div class="lbl">Placed templates become normal lines: erase, redraw or fill any part.</div>
+    </section>
+
+    <section class="sec">
+      <h3>Layers</h3>
+      <div id="layers"></div>
+      <div class="row"><label for="phOp">Photo fade</label><input type="range" id="phOp" min="10" max="100" value="100"><output id="phOpO">100</output></div>
+    </section>
+  </aside>
+
+  <footer class="status"><span>Tool: <b id="stTool">Pen</b></span><span id="stHint"></span><span class="grow"></span><span>V select · B pen · P paint · E eraser · G fill · I picker · M mirror · [ ] size · X swap</span></footer>
+</div>
+
+<script>
+// Sketch-to-Shop engine: parametric garment generator + on-device sketch recognizer + ranker + chat parser.
+// Pure JS, no DOM, no network. Shared by the page and the node test harness.
+const S2S = (() => {
+  // ---------- seeded RNG ----------
+  function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+
+  const CATS = ['top', 'kurta', 'dress', 'skirt', 'trousers'];
+  const UPPER = new Set(['top', 'kurta', 'dress']);
+  const LABELS = {
+    category: { top: 'Top', kurta: 'Kurta', dress: 'Dress', skirt: 'Skirt', trousers: 'Trousers' },
+    sleeve: { none: 'Sleeveless', short: 'Short sleeve', three: '3/4 sleeve', full: 'Full sleeve' },
+    neck: { v: 'V-neck', round: 'Round neck', high: 'High neck' },
+    fit: { flared: 'Flared', straight: 'Straight' },
+    pattern: { solid: 'Solid', printed: 'Printed' },
+  };
+  function lengthLabel(cat, v) {
+    const m = {
+      top: { short: 'Cropped', mid: 'Regular', long: 'Longline' },
+      kurta: { short: 'Short', mid: 'Knee length', long: 'Calf length' },
+      dress: { short: 'Mini', mid: 'Midi', long: 'Maxi' },
+      skirt: { short: 'Mini', mid: 'Midi', long: 'Maxi' },
+      trousers: { short: 'Shorts', mid: 'Cropped', long: 'Full length' },
+    };
+    return (m[cat] || m.dress)[v] || v;
+  }
+  function fitLabel(cat, v) { return cat === 'trousers' ? (v === 'flared' ? 'Wide-leg' : 'Slim') : (cat === 'kurta' && v === 'flared' ? 'Flared (Anarkali)' : LABELS.fit[v]); }
+
+  // ---------- parametric garment generator ----------
+  // returns {outline:[[x,y]...closed], extra:[[pts]...]} in garment units, y down
+  function garment(spec, r) {
+    const J = (a) => r ? 1 + (r() * 2 - 1) * a : 1; // multiplicative jitter
+    const { category: cat } = spec;
+    let right = [], extra = [];
+    if (UPPER.has(cat)) {
+      const nh = 0.17 * J(0.15);
+      const nd = { high: 0.03, round: 0.16, v: 0.32 }[spec.neck] * J(0.2);
+      // neckline, center -> neck corner
+      const N = 10;
+      for (let i = 0; i <= N; i++) {
+        const t = i / N;
+        if (spec.neck === 'v') right.push([nh * t, nd * (1 - t)]);
+        else { const a = t * Math.PI / 2; right.push([nh * Math.sin(a), nd * Math.cos(a)]); }
+      }
+      const bx = 0.5;
+      if (spec.sleeve === 'none') {
+        right.push([0.4 * J(0.05), 0.06]);
+        right.push([0.42, 0.18]); right.push([0.47, 0.27]); right.push([bx, 0.32]);
+      } else {
+        const sh = [0.56 * J(0.04), 0.08];
+        const P = { short: [0.32, 35], three: [0.62, 58], full: [0.95, 68] }[spec.sleeve];
+        const L = P[0] * J(0.12), th = (P[1] + (r ? (r() * 2 - 1) * 6 : 0)) * Math.PI / 180;
+        const cw = 0.26 * J(0.1);
+        const co = [sh[0] + L * Math.cos(th), sh[1] + L * Math.sin(th)];
+        const ci = [co[0] - cw * Math.sin(th), co[1] + cw * Math.cos(th)];
+        right.push(sh, co, ci, [bx, 0.30]);
+      }
+      let wy, wx, hy, hx;
+      const len = spec.length;
+      if (cat === 'top') { wy = 0.7; wx = 0.48; hy = { short: 0.85, mid: 1.25, long: 1.6 }[len]; hx = spec.fit === 'flared' ? 0.7 : 0.5; }
+      else if (cat === 'kurta') { wy = 0.75; hy = { short: 1.9, mid: 2.4, long: 2.9 }[len]; if (spec.fit === 'flared') { wx = 0.44; hx = 0.95; } else { wx = 0.48; hx = 0.56; } }
+      else { wy = 0.75; wx = 0.40; hy = { short: 1.6, mid: 2.2, long: 2.9 }[len]; hx = spec.fit === 'flared' ? 0.9 : 0.52; }
+      wy = Math.min(wy, hy * 0.7);
+      hy *= J(0.08); hx *= J(0.08); wx *= J(0.05);
+      right.push([wx, wy], [hx, hy]);
+      const dip = spec.fit === 'flared' && cat !== 'top' ? 0.05 : 0;
+      right.push([hx * 0.5, hy + dip * 0.7], [0, hy + dip]);
+    } else if (cat === 'skirt') {
+      const w = 0.42 * J(0.05), L = { short: 0.7, mid: 1.2, long: 1.9 }[spec.length] * J(0.08);
+      const hx = (spec.fit === 'flared' ? 0.42 + 0.35 * L : 0.46) * J(0.08);
+      right.push([0, 0], [w, 0], [hx, L], [hx * 0.5, L + 0.03], [0, L + 0.03]);
+      extra.push([[-w, 0.08], [w, 0.08]]);
+    } else { // trousers
+      const w = 0.5 * J(0.04), L = { short: 0.6, mid: 1.1, long: 1.7 }[spec.length] * J(0.08);
+      const crotch = Math.min(0.42, 0.45 * L);
+      const ox = (spec.fit === 'flared' ? 0.66 : 0.46) * J(0.06), lw = (spec.fit === 'flared' ? 0.5 : 0.24) * J(0.08);
+      right.push([0, 0], [w, 0], [ox, L], [Math.max(0.05, ox - lw), L], [0, crotch]);
+      extra.push([[-w, 0.07], [w, 0.07]]);
+    }
+    // mirror into closed loop
+    const left = right.slice().reverse().map(([x, y]) => [-x, y]);
+    let outline = right.concat(left.slice(1));
+    if (spec.pattern === 'printed') {
+      const rr = r || rng(7);
+      const bb = bbox(outline);
+      let tries = 0;
+      while (extra.length < 14 && tries++ < 400) {
+        const x = bb.x0 + rr() * (bb.x1 - bb.x0), y = bb.y0 + rr() * (bb.y1 - bb.y0);
+        if (!pip([x, y], outline) || distToPoly([x, y], outline) < 0.12) continue;
+        const k = 0.035, dot = [];
+        for (let i = 0; i <= 8; i++) { const a = i / 8 * Math.PI * 2; dot.push([x + k * Math.cos(a), y + k * Math.sin(a)]); }
+        extra.push(dot);
+      }
+    }
+    return { outline, extra };
+  }
+
+  function bbox(pts) { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const [x, y] of pts) { if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; } return { x0, y0, x1, y1 }; }
+  function pip(p, poly) { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if (((yi > p[1]) !== (yj > p[1])) && (p[0] < (xj - xi) * (p[1] - yi) / (yj - yi) + xi)) c = !c; } return c; }
+  function distToPoly(p, poly) { let d = 1e9; for (let i = 0; i < poly.length - 1; i++) d = Math.min(d, segDist(p, poly[i], poly[i + 1])); return d; }
+  function segDist(p, a, b) { const dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy; let t = l ? ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l : 0; t = Math.max(0, Math.min(1, t)); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy); }
+
+  // turn a garment into hand-drawn-looking strokes (for samples and self-test)
+  function sketchStrokes(spec, r) {
+    const g = garment(spec, r);
+    const out = [];
+    const wob = (pts, amp) => {
+      const dense = densify(pts, 0.025);
+      const ph = r ? r() * 6.28 : 0, fr = r ? 3 + r() * 4 : 0;
+      return dense.map(([x, y], i) => r ? [x + amp * (Math.sin(i / fr + ph) + (r() - 0.5) * 0.6), y + amp * (Math.cos(i / fr * 1.3 + ph) + (r() - 0.5) * 0.6)] : [x, y]);
+    };
+    let ol = wob(g.outline.concat([g.outline[0]]), r ? 0.008 : 0);
+    if (r && r() < 0.35) { // leave a small gap, like a real sketch that doesn't close
+      const i = Math.floor(r() * (ol.length - 4)); ol = ol.slice(i + 2).concat(ol.slice(0, i));
+    }
+    out.push(ol);
+    for (const e of g.extra) out.push(wob(e, r ? 0.004 : 0));
+    // random shear / scale / rotation
+    if (r) {
+      const sx = 1 + (r() - 0.5) * 0.16, sy = 1 + (r() - 0.5) * 0.16, rot = (r() - 0.5) * 0.08;
+      const c = Math.cos(rot), s = Math.sin(rot);
+      for (const st of out) for (const p of st) { const x = p[0] * sx, y = p[1] * sy; p[0] = x * c - y * s; p[1] = x * s + y * c; }
+    }
+    return out;
+  }
+  function densify(pts, step) {
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
+      const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / step));
+      for (let k = 1; k <= n; k++) out.push([ax + (bx - ax) * k / n, ay + (by - ay) * k / n]);
+    }
+    return out;
+  }
+
+  // ---------- recognizer ----------
+  const N = 96;
+  function rasterize(strokes) {
+    const all = strokes.flat();
+    if (all.length < 2) return null;
+    const bb = bbox(all);
+    const W = bb.x1 - bb.x0, H = bb.y1 - bb.y0;
+    if (Math.max(W, H) <= 0) return null;
+    const sc = 82 / Math.max(W, H);
+    const ox = (N - W * sc) / 2 - bb.x0 * sc, oy = (N - H * sc) / 2 - bb.y0 * sc;
+    const ink = new Uint8Array(N * N);
+    const plot = (x, y) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (dx * dy) continue; const X = Math.round(x) + dx, Y = Math.round(y) + dy; if (X >= 0 && Y >= 0 && X < N && Y < N) ink[Y * N + X] = 1; } };
+    for (const st of strokes) {
+      if (st.length === 1) { plot(st[0][0] * sc + ox, st[0][1] * sc + oy); continue; }
+      for (let i = 1; i < st.length; i++) {
+        const ax = st[i - 1][0] * sc + ox, ay = st[i - 1][1] * sc + oy, bx = st[i][0] * sc + ox, by = st[i][1] * sc + oy;
+        const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) * 2));
+        for (let k = 0; k <= n; k++) plot(ax + (bx - ax) * k / n, ay + (by - ay) * k / n);
+      }
+    }
+    return ink;
+  }
+  function dilate(m, r) { const o = new Uint8Array(N * N); for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (m[y * N + x]) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < N && Y < N && dx * dx + dy * dy <= r * r + r) o[Y * N + X] = 1; } return o; }
+  function erode(m, r) { const inv = m.map(v => 1 - v); const d = dilate(inv, r); return d.map(v => 1 - v); }
+  function floodOutside(block) {
+    const out = new Uint8Array(N * N), q = [];
+    for (let i = 0; i < N; i++) for (const p of [i, (N - 1) * N + i, i * N, i * N + N - 1]) if (!block[p] && !out[p]) { out[p] = 1; q.push(p); }
+    while (q.length) { const p = q.pop(), x = p % N, y = (p / N) | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= N || Y >= N) continue; const k = Y * N + X; if (!block[k] && !out[k]) { out[k] = 1; q.push(k); } } }
+    return out;
+  }
+  const count = (m) => { let c = 0; for (const v of m) c += v; return c; };
+
+  function silhouette(ink) {
+    const inkC = count(ink);
+    for (const d of [1, 2, 3]) {
+      const blk = dilate(ink, d);
+      const outside = floodOutside(blk);
+      let mask = outside.map(v => 1 - v);
+      mask = erode(mask, d);
+      for (let i = 0; i < mask.length; i++) mask[i] |= ink[i];
+      if (count(mask) > inkC * 2.2) return { mask, closed: d };
+    }
+    // fallback: fill between ink horizontally AND vertically
+    const mask = new Uint8Array(N * N);
+    const rowL = new Array(N).fill(N), rowR = new Array(N).fill(-1), colT = new Array(N).fill(N), colB = new Array(N).fill(-1);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (ink[y * N + x]) { rowL[y] = Math.min(rowL[y], x); rowR[y] = Math.max(rowR[y], x); colT[x] = Math.min(colT[x], y); colB[x] = Math.max(colB[x], y); }
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (x >= rowL[y] && x <= rowR[y] && y >= colT[x] && y <= colB[x]) mask[y * N + x] = 1;
+    return { mask, closed: 0 };
+  }
+
+  const tconf = (x, ths, scale) => { let d = Infinity; for (const t of ths) d = Math.min(d, Math.abs(x - t)); return Math.min(0.98, 0.5 + 0.5 * Math.tanh(d / scale)); };
+  const pick = (x, ths, vals) => { for (let i = 0; i < ths.length; i++) if (x < ths[i]) return vals[i]; return vals[vals.length - 1]; };
+
+  function recognize(strokes, colors) {
+    const t0 = (typeof performance !== 'undefined' ? performance : Date).now();
+    const ink = rasterize(strokes);
+    if (!ink) return null;
+    const { mask, closed } = silhouette(ink);
+    // rows -> runs
+    let y0 = N, y1 = -1, x0 = N, x1 = -1, mx = 0, mc = 0;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (mask[y * N + x]) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); x0 = Math.min(x0, x); x1 = Math.max(x1, x); mx += x; mc++; }
+    if (mc < 20) return null;
+    const h = y1 - y0 + 1, w = x1 - x0 + 1, cx = Math.round(mx / mc);
+    const runs = [];
+    for (let y = 0; y < N; y++) { const rr = []; let s = -1; for (let x = 0; x <= N; x++) { const v = x < N && mask[y * N + x]; if (v && s < 0) s = x; if (!v && s >= 0) { rr.push([s, x - 1]); s = -1; } } runs.push(rr); }
+    const span = (y) => runs[y].length ? runs[y][runs[y].length - 1][1] - runs[y][0][0] + 1 : 0;
+    const centerRun = (y) => { let best = null, bd = 1e9; for (const r of runs[y]) { const d = cx < r[0] ? r[0] - cx : cx > r[1] ? cx - r[1] : 0; if (d < bd) { bd = d; best = r; } } return best ? best[1] - best[0] + 1 : 0; };
+    const rowAt = (f) => Math.min(y1, Math.max(y0, Math.round(y0 + f * (h - 1))));
+    const median = (a) => { const s = a.slice().sort((p, q) => p - q); return s.length ? s[s.length >> 1] : 0; };
+
+    // legs: rows near the bottom where the center column is empty and there is fabric on both sides
+    let legRows = 0, legTot = 0, legW = [];
+    for (let y = rowAt(0.65); y <= rowAt(0.98); y++) {
+      legTot++;
+      const rr = runs[y]; if (rr.length < 2) continue;
+      const inside = rr.some(r => cx >= r[0] - 1 && cx <= r[1] + 1);
+      const L = rr.some(r => r[1] < cx), R = rr.some(r => r[0] > cx);
+      const gl = Math.max(...rr.filter(r => r[1] < cx).map(r => r[1])), gr = Math.min(...rr.filter(r => r[0] > cx).map(r => r[0]));
+      if (!inside && L && R && gr - gl < 0.5 * w) { legRows++; if (y >= rowAt(0.88)) legW.push((rr[0][1] - rr[0][0] + 1 + rr[rr.length - 1][1] - rr[rr.length - 1][0] + 1) / 2); }
+    }
+    const legsFrac = legTot ? legRows / legTot : 0;
+
+    // torso width, shoulder span, sleeve extent
+    const tw = []; for (let y = rowAt(0.15); y <= rowAt(0.75); y++) tw.push(centerRun(y));
+    tw.sort((p, q) => p - q);
+    const torsoW = Math.max(1, tw[Math.floor(tw.length * 0.15)] || 1);
+    let topSpan = 0, topSpanY = y0; for (let y = rowAt(0.02); y <= rowAt(0.4); y++) { const s = span(y); if (s > topSpan) { topSpan = s; topSpanY = y; } }
+    const sleeveRatio = topSpan / torsoW;
+    let ys = topSpanY; while (ys + 1 <= y1 && span(ys + 1) > 1.25 * torsoW) ys++;
+    const sleeveLen = (ys - y0) / torsoW;
+
+    // neckline from the top contour
+    const half = Math.max(3, Math.round(0.36 * torsoW));
+    const topY = []; for (let x = cx - half; x <= cx + half; x++) { let t = N; for (let y = y0; y <= y1; y++) if (x >= 0 && x < N && mask[y * N + x]) { t = y; break; } topY.push(t); }
+    const shY = Math.min(...topY);
+    const mid = topY.length >> 1;
+    const cY = median([topY[mid - 1], topY[mid], topY[mid + 1]]);
+    const depth = Math.max(0, cY - shY);
+    let A = 0, D = 0; for (const t of topY) { const d = Math.min(t, cY) - shY; if (d > 1) { A += d; D++; } }
+    const fillRatio = depth > 0 && D > 0 ? A / (D * depth) : 1;
+    const dN = depth / torsoW;
+
+    // widths
+    const topW0 = () => Math.max(1, median([span(rowAt(0.03)), span(rowAt(0.05)), span(rowAt(0.07))]));
+    const botW0 = () => Math.max(1, median([span(rowAt(0.93)), span(rowAt(0.95)), span(rowAt(0.97))]));
+    const topW = topW0(), botW = botW0();
+    const flare = botW / torsoW;
+    const lenRatio = h / torsoW;
+
+    // printed: ink well inside the silhouette
+    const outside = mask.map(v => 1 - v);
+    const band = dilate(outside, 4);
+    const inn = new Uint8Array(N * N); for (let i = 0; i < ink.length; i++) if (ink[i] && !band[i]) inn[i] = 1;
+    // count small separate marks (dots, motifs) — long lines like waistbands or seams don't count
+    let marks = 0; const seen = new Uint8Array(N * N);
+    for (let i = 0; i < inn.length; i++) if (inn[i] && !seen[i]) {
+      const q = [i]; seen[i] = 1; let a = N, b = -1, c = N, d = -1;
+      while (q.length) { const p = q.pop(), x = p % N, y = (p / N) | 0; a = Math.min(a, x); b = Math.max(b, x); c = Math.min(c, y); d = Math.max(d, y);
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= N || Y >= N) continue; const k = Y * N + X; if (inn[k] && !seen[k]) { seen[k] = 1; q.push(k); } } }
+      if (Math.max(b - a, d - c) <= 9) marks++;
+    }
+    const innerFrac = marks;
+    const conv = (span(rowAt(0.25)) - (topW0() + (botW0() - topW0()) * 0.222)) / Math.max(1, botW0());
+
+    // ---------- decisions ----------
+    const f = {};
+    const res = { features: f, attrs: {}, mask, ink, closed };
+    Object.assign(f, { conv, legsFrac, torsoW, sleeveRatio, sleeveLen, dN, fillRatio, flare, lenRatio, topW, botW, innerFrac, aspect: h / w });
+
+    let cat, catConf;
+    const skirtLike = sleeveRatio < 1.3 && dN < 0.07 && topW / botW < 1.02 && conv < 0.045 && h / w < 2.6;
+    if (legsFrac > 0.35) { cat = 'trousers'; catConf = tconf(legsFrac, [0.35], 0.2); }
+    else if (skirtLike) { cat = 'skirt'; catConf = Math.min(tconf(dN, [0.07], 0.04), tconf(sleeveRatio, [1.3], 0.15)); }
+    else if (lenRatio < 1.5) { cat = 'top'; catConf = tconf(lenRatio, [1.5], 0.2); }
+    else {
+      // straight, column-like silhouettes read as kurtas; a waist that flares out reads as a dress.
+      // A flared kurta (Anarkali) and an A-line dress look alike in outline, so confidence stays modest there.
+      cat = flare > 1.17 ? 'dress' : 'kurta';
+      catConf = Math.min(flare > 1.5 ? 0.6 : 0.85, tconf(flare, [1.17], 0.08), tconf(lenRatio, [1.5], 0.2));
+    }
+    res.attrs.category = { v: cat, c: catConf };
+
+    if (UPPER.has(cat)) {
+      let sl, sc;
+      if (sleeveRatio < 1.3) { sl = 'none'; sc = tconf(sleeveRatio, [1.3], 0.1); }
+      else { sl = pick(sleeveLen, [0.64, 0.88], ['short', 'three', 'full']); sc = Math.min(tconf(sleeveLen, [0.64, 0.88], 0.1), tconf(sleeveRatio, [1.3], 0.1)); }
+      res.attrs.sleeve = { v: sl, c: sc };
+      let nk, nc;
+      if (dN < 0.075) { nk = 'high'; nc = tconf(dN, [0.075], 0.025); }
+      else { const vScore = (dN - 0.18) * 10 + (0.67 - fillRatio) * 5; nk = vScore > 0 ? 'v' : 'round'; nc = Math.min(tconf(vScore, [0], 0.4), tconf(dN, [0.075], 0.03)); }
+      res.attrs.neck = { v: nk, c: nc };
+    }
+    const LT = { top: [1.05, 1.6], kurta: [2.05, 2.62], dress: [2.05, 2.8] };
+    let lv, lc;
+    if (UPPER.has(cat)) { lv = pick(lenRatio, LT[cat], ['short', 'mid', 'long']); lc = tconf(lenRatio, LT[cat], 0.15); }
+    else if (cat === 'skirt') { const r = h / topW; f.lenW = r; lv = pick(r, [1.1, 1.75], ['short', 'mid', 'long']); lc = tconf(r, [1.1, 1.75], 0.15); }
+    else { const r = h / topW; f.lenW = r; lv = pick(r, [0.93, 1.33], ['short', 'mid', 'long']); lc = tconf(r, [0.93, 1.33], 0.1); }
+    res.attrs.length = { v: lv, c: lc };
+
+    let fv, fc;
+    if (cat === 'trousers') { const lr = (legW.length ? median(legW) : torsoW / 2) / (topW / 2); f.legRatio = lr; fv = lr > 0.72 ? 'flared' : 'straight'; fc = tconf(lr, [0.72], 0.12); }
+    else if (cat === 'skirt') { const r = botW / topW; fv = r > 1.35 ? 'flared' : 'straight'; fc = tconf(r, [1.35], 0.15); }
+    else { const th = cat === 'top' ? 1.2 : 1.5; fv = flare > th ? 'flared' : 'straight'; fc = tconf(flare, [th], 0.15); }
+    res.attrs.fit = { v: fv, c: fc };
+    res.attrs.pattern = { v: innerFrac >= 3 ? 'printed' : 'solid', c: tconf(innerFrac, [2.5], 1.5) };
+
+    // colour: dominant by stroke length among non-ink colours
+    if (colors && colors.length) {
+      const tally = {};
+      strokes.forEach((st, i) => { const c = colors[i]; if (!c || c === 'ink') return; let L = 0; for (let k = 1; k < st.length; k++) L += Math.hypot(st[k][0] - st[k - 1][0], st[k][1] - st[k - 1][1]); tally[c] = (tally[c] || 0) + L; });
+      const tot = Object.values(tally).reduce((a, b) => a + b, 0);
+      const best = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
+      if (best) res.attrs.color = { v: best[0], c: Math.min(0.98, best[1] / tot) };
+    }
+    res.ms = (typeof performance !== 'undefined' ? performance : Date).now() - t0;
+    return res;
+  }
+
+  // ---------- catalog ----------
+  const COLORS = {
+    maroon: ['Maroon', '#7a1f2b'], red: ['Red', '#d23a3a'], pink: ['Pink', '#e77aa0'], mustard: ['Mustard', '#d9a21b'],
+    green: ['Green', '#2f8a57'], teal: ['Teal', '#1f8a8a'], navy: ['Navy', '#1f2f5c'], blue: ['Blue', '#3a74d2'],
+    lavender: ['Lavender', '#9b86d1'], black: ['Black', '#222326'], white: ['Ivory', '#efe9dc'],
+  };
+  const BRANDS = ['Saanjh', 'Loomwell', 'Indigo Lane', 'Kaveri Studio', 'Thread & Tide', 'Neel', 'Arka', 'Mulmul Co.'];
+  function makeCatalog() {
+    const r = rng(2026);
+    const items = [];
+    const add = (spec, occ, base) => {
+      const id = 'p' + items.length;
+      const brand = BRANDS[Math.floor(r() * BRANDS.length)];
+      const price = Math.round((base * (0.7 + r() * 0.8)) / 50) * 50 - 1;
+      items.push({ id, ...spec, occasion: occ, brand, price, name: productName(spec) });
+    };
+    const P = (a) => a[Math.floor(r() * a.length)];
+    const combos = [
+      // kurtas
+      ['kurta', 'three', 'round', 'mid', 'straight', 'printed', 'mustard', 'festive', 1600], ['kurta', 'full', 'v', 'long', 'flared', 'solid', 'maroon', 'festive', 2600],
+      ['kurta', 'three', 'v', 'long', 'flared', 'printed', 'pink', 'festive', 2400], ['kurta', 'short', 'round', 'short', 'straight', 'printed', 'blue', 'casual', 900],
+      ['kurta', 'none', 'high', 'mid', 'straight', 'solid', 'white', 'office', 1300], ['kurta', 'full', 'high', 'mid', 'straight', 'solid', 'navy', 'office', 1500],
+      ['kurta', 'three', 'round', 'long', 'flared', 'solid', 'green', 'festive', 2200], ['kurta', 'short', 'v', 'mid', 'straight', 'solid', 'teal', 'casual', 1100],
+      ['kurta', 'three', 'high', 'mid', 'straight', 'printed', 'maroon', 'festive', 1800], ['kurta', 'full', 'round', 'short', 'straight', 'printed', 'lavender', 'casual', 1000],
+      ['kurta', 'none', 'v', 'long', 'flared', 'printed', 'red', 'festive', 2100], ['kurta', 'three', 'round', 'mid', 'straight', 'printed', 'maroon', 'festive', 1400], ['kurta', 'full', 'v', 'mid', 'straight', 'solid', 'navy', 'office', 1200], ['kurta', 'three', 'v', 'mid', 'straight', 'solid', 'black', 'office', 1400],
+      // dresses
+      ['dress', 'none', 'v', 'mid', 'flared', 'printed', 'green', 'casual', 1700], ['dress', 'short', 'round', 'short', 'flared', 'solid', 'red', 'party', 1900],
+      ['dress', 'full', 'high', 'long', 'flared', 'solid', 'maroon', 'festive', 3200], ['dress', 'none', 'round', 'short', 'straight', 'solid', 'black', 'party', 2200],
+      ['dress', 'three', 'v', 'long', 'flared', 'printed', 'mustard', 'festive', 2800], ['dress', 'short', 'v', 'mid', 'straight', 'solid', 'navy', 'office', 2000],
+      ['dress', 'none', 'high', 'long', 'flared', 'solid', 'lavender', 'party', 2600], ['dress', 'short', 'round', 'mid', 'flared', 'printed', 'blue', 'casual', 1500],
+      ['dress', 'full', 'v', 'mid', 'flared', 'solid', 'pink', 'party', 2400], ['dress', 'three', 'round', 'short', 'straight', 'printed', 'white', 'casual', 1300],
+      // tops
+      ['top', 'short', 'round', 'mid', 'straight', 'solid', 'white', 'casual', 600], ['top', 'short', 'v', 'mid', 'straight', 'printed', 'teal', 'casual', 700],
+      ['top', 'full', 'high', 'mid', 'straight', 'solid', 'navy', 'office', 1100], ['top', 'none', 'v', 'short', 'straight', 'solid', 'black', 'party', 800],
+      ['top', 'three', 'round', 'mid', 'flared', 'printed', 'pink', 'casual', 900], ['top', 'full', 'v', 'mid', 'straight', 'solid', 'maroon', 'office', 1000],
+      ['top', 'none', 'round', 'mid', 'straight', 'printed', 'mustard', 'casual', 650], ['top', 'short', 'high', 'short', 'straight', 'solid', 'red', 'party', 750],
+      ['top', 'three', 'v', 'mid', 'straight', 'solid', 'lavender', 'office', 950], ['top', 'full', 'round', 'mid', 'flared', 'printed', 'green', 'festive', 1200],
+      // skirts
+      ['skirt', null, null, 'long', 'flared', 'printed', 'mustard', 'festive', 1800], ['skirt', null, null, 'mid', 'straight', 'solid', 'black', 'office', 1100],
+      ['skirt', null, null, 'short', 'flared', 'solid', 'pink', 'party', 900], ['skirt', null, null, 'long', 'flared', 'solid', 'maroon', 'festive', 2000],
+      ['skirt', null, null, 'mid', 'flared', 'printed', 'blue', 'casual', 1000], ['skirt', null, null, 'short', 'straight', 'solid', 'navy', 'office', 950],
+      ['skirt', null, null, 'long', 'straight', 'printed', 'green', 'casual', 1200], ['skirt', null, null, 'mid', 'straight', 'printed', 'red', 'party', 1050],
+      // trousers
+      ['trousers', null, null, 'long', 'flared', 'solid', 'white', 'festive', 1100], ['trousers', null, null, 'long', 'straight', 'solid', 'black', 'office', 1300],
+      ['trousers', null, null, 'long', 'flared', 'printed', 'mustard', 'casual', 1000], ['trousers', null, null, 'mid', 'straight', 'solid', 'navy', 'office', 1200],
+      ['trousers', null, null, 'short', 'straight', 'solid', 'blue', 'casual', 700], ['trousers', null, null, 'long', 'straight', 'solid', 'green', 'casual', 1150],
+      ['trousers', null, null, 'mid', 'flared', 'solid', 'maroon', 'festive', 1250], ['trousers', null, null, 'short', 'flared', 'printed', 'pink', 'casual', 650],
+    ];
+    for (const c of combos) add({ category: c[0], sleeve: c[1], neck: c[2], length: c[3], fit: c[4], pattern: c[5], color: c[6] }, c[7], c[8]);
+    return items;
+  }
+  function productName(s) {
+    const col = COLORS[s.color][0];
+    const pr = s.pattern === 'printed' ? (s.category === 'kurta' || s.category === 'skirt' ? 'Block-print ' : 'Floral ') : '';
+    const n = { top: s.fit === 'flared' ? 'Peplum Top' : 'Top', kurta: s.fit === 'flared' ? 'Anarkali Kurta' : 'Straight Kurta', dress: s.fit === 'flared' ? 'A-line Dress' : 'Sheath Dress', skirt: s.fit === 'flared' ? 'Flared Skirt' : 'Pencil Skirt', trousers: s.fit === 'flared' ? 'Palazzo Pants' : 'Slim Trousers' }[s.category];
+    const ln = (s.category === 'dress' || s.category === 'skirt') ? lengthLabel(s.category, s.length) + ' ' : s.category === 'trousers' && s.length === 'short' ? '' : '';
+    const nm = s.category === 'trousers' && s.length === 'short' ? (s.fit === 'flared' ? 'Wide Shorts' : 'Shorts') : n;
+    const nk = UPPER.has(s.category) ? LABELS.neck[s.neck] + ' ' : '';
+    return `${col} ${pr}${nk}${ln}${nm}`.replace(/\s+/g, ' ');
+  }
+
+  // ---------- ranking ----------
+  const W = { category: 6, sleeve: 2, neck: 2, length: 1.5, fit: 1.5, pattern: 1, color: 3, occasion: 1.5 };
+  const ORD = { sleeve: ['none', 'short', 'three', 'full'], length: ['short', 'mid', 'long'] };
+  const CATSIM = { 'kurta|dress': 0.5, 'dress|kurta': 0.5, 'top|kurta': 0.3, 'kurta|top': 0.3, 'top|dress': 0.2, 'dress|top': 0.2, 'skirt|trousers': 0.15, 'trousers|skirt': 0.15, 'dress|skirt': 0.15, 'skirt|dress': 0.15 };
+  function simFor(k, a, b) {
+    if (a === b) return 1;
+    if (k === 'category') return CATSIM[a + '|' + b] || 0;
+    if (ORD[k]) { const d = Math.abs(ORD[k].indexOf(a) - ORD[k].indexOf(b)); return d === 1 ? 0.45 : 0; }
+    return 0;
+  }
+  // query: {attr: {v, c}} ; constraints: {priceMax, occasion}
+  function rank(catalog, query, cons) {
+    const out = [];
+    for (const p of catalog) {
+      if (cons.priceMax && p.price > cons.priceMax) continue;
+      let s = 0, t = 0; const why = [];
+      for (const k of ['category', 'sleeve', 'neck', 'length', 'fit', 'pattern', 'color']) {
+        const q = query[k]; if (!q || q.v == null) continue;
+        if ((k === 'sleeve' || k === 'neck') && !UPPER.has(p.category)) continue;
+        if (k === 'length' && p.category !== query.category?.v && !(UPPER.has(p.category) && UPPER.has(query.category?.v))) continue;
+        const m = simFor(k, q.v, p[k]);
+        const wt = W[k] * q.c * (q.locked ? 2 : 1); // what the user asked for explicitly outweighs what the model guessed
+        s += wt * m; t += wt;
+        why.push({ k, m, label: attrLabel(k, p[k], p.category) });
+      }
+      if (cons.occasion) { const m = p.occasion === cons.occasion ? 1 : 0; s += W.occasion * m; t += W.occasion; why.push({ k: 'occasion', m, label: OCC[p.occasion] }); }
+      out.push({ p, score: t ? s / t : 0, why });
+    }
+    out.sort((a, b) => b.score - a.score || a.p.price - b.p.price);
+    return out;
+  }
+  const OCC = { festive: 'Festive', office: 'Office', casual: 'Casual', party: 'Party' };
+  function attrLabel(k, v, cat) {
+    if (v == null) return '';
+    if (k === 'length') return lengthLabel(cat, v);
+    if (k === 'fit') return fitLabel(cat, v);
+    if (k === 'color') return COLORS[v] ? COLORS[v][0] : v;
+    return (LABELS[k] && LABELS[k][v]) || v;
+  }
+
+  // ---------- offline chat intent parser ----------
+  const COLOR_WORDS = [['maroon', 'maroon'], ['wine', 'maroon'], ['burgundy', 'maroon'], ['red', 'red'], ['pink', 'pink'], ['rose', 'pink'], ['mustard', 'mustard'], ['yellow', 'mustard'], ['haldi', 'mustard'],
+    ['green', 'green'], ['olive', 'green'], ['teal', 'teal'], ['navy', 'navy'], ['blue', 'blue'], ['indigo', 'navy'], ['lavender', 'lavender'], ['purple', 'lavender'], ['lilac', 'lavender'], ['black', 'black'], ['white', 'white'], ['ivory', 'white'], ['cream', 'white'], ['off-white', 'white']];
+  function parseChat(text, state) {
+    // state: {attrs (current effective query), cons}
+    let t = ' ' + text.toLowerCase().replace(/[’']/g, '').replace(/\s+/g, ' ') + ' ';
+    const ch = [];
+    const set = (k, v, how) => ch.push({ k, v, how });
+    const cut = (re) => { const m = t.match(re); if (m) t = t.replace(re, ' '); return m; };
+    if (cut(/\b(reset|start over|clear (all|everything)|from scratch)\b/)) return [{ k: '__reset' }];
+    if (cut(/\bundo\b/)) return [{ k: '__undo' }];
+    // price
+    let m = cut(/(under|below|less than|within|max|upto|up to|budget( of)?|cheaper than|<)\s*(₹|rs\.?|inr)?\s*(\d[\d,]*(\.\d+)?)\s*(k|thousand)?/);
+    if (m) { let n = parseFloat(m[4].replace(/,/g, '')); if (m[6]) n *= 1000; set('priceMax', Math.round(n), 'price'); }
+    else if (cut(/\b(cheaper|less expensive|lower price|affordable|budget)\b/)) set('priceMax', '__cheaper');
+    if (cut(/\b(any price|no budget|price doesnt matter)\b/)) set('priceMax', null);
+    // sleeves
+    if (cut(/\b(sleeveless|no sleeves?|without sleeves?|strappy)\b/)) set('sleeve', 'none');
+    else if (cut(/\b(short|half|cap) ?sleeves?d?\b/)) set('sleeve', 'short');
+    else if (cut(/\b(3\/4|three ?quarter|elbow)( length)? ?sleeves?\b/) || cut(/\b(3\/4|three ?quarter)\b/)) set('sleeve', 'three');
+    else if (cut(/\b(full|long) ?sleeves?d?\b/)) set('sleeve', 'full');
+    else if (cut(/\blonger sleeves?\b/)) set('sleeve', '__up');
+    else if (cut(/\bshorter sleeves?\b/)) set('sleeve', '__down');
+    // neck
+    if (cut(/\bv[ -]?neck(line)?\b/)) set('neck', 'v');
+    else if (cut(/\b(round|crew|scoop) ?neck(line)?\b/)) set('neck', 'round');
+    else if (cut(/\b(high|mandarin|band|collar(ed)?|turtle) ?(neck|collar)?\b/)) set('neck', 'high');
+    // category
+    if (cut(/\b(kurtas?|kurtis?|anarkali)\b/)) { set('category', 'kurta'); if (/anarkali/.test(text.toLowerCase())) set('fit', 'flared'); }
+    else if (cut(/\b(dress(es)?|gowns?|frocks?)\b/)) set('category', 'dress');
+    else if (cut(/\b(skirts?|lehenga)\b/)) set('category', 'skirt');
+    else if (cut(/\b(trousers?|pants?|palazzos?|jeans|shorts)\b/)) { set('category', 'trousers'); if (/palazzo/.test(text.toLowerCase())) set('fit', 'flared'); if (/\bshorts\b/.test(text.toLowerCase())) set('length', 'short'); }
+    else if (cut(/\b(tops?|shirts?|tees?|t-shirts?|tshirts?|blouses?|tunics?)\b/)) set('category', 'top');
+    // fit
+    if (cut(/\b(flared|flare|a-line|aline|flowy|wide[ -]leg|umbrella)\b/)) set('fit', 'flared');
+    else if (cut(/\b(straight|fitted|slim|bodycon|pencil|sheath)\b/)) set('fit', 'straight');
+    // length
+    if (cut(/\b(mini|knee length|above knee)\b/) && !ch.some(c => c.k === 'length')) set('length', 'short');
+    else if (cut(/\b(midi|calf length|mid length)\b/)) set('length', 'mid');
+    else if (cut(/\b(maxi|floor length|ankle length|full length)\b/)) set('length', 'long');
+    else if (cut(/\bshorter\b/)) set('length', '__down');
+    else if (cut(/\blonger\b/)) set('length', '__up');
+    // pattern
+    if (cut(/\b(not printed|no prints?|plain|solid)\b/)) set('pattern', 'solid');
+    else if (cut(/\b(printed|prints?|floral|pattern(ed)?|block[ -]print|bandhani|ikat|stripes?|striped|polka)\b/)) set('pattern', 'printed');
+    // occasion
+    if (cut(/\b(wedding|festive|diwali|sangeet|haldi|mehendi|mehndi|puja|pooja|eid|function)\b/)) set('occasion', 'festive');
+    else if (cut(/\b(office|work|formal|interview|meeting)\b/)) set('occasion', 'office');
+    else if (cut(/\b(party|night out|date|cocktail|club)\b/)) set('occasion', 'party');
+    else if (cut(/\b(casual|everyday|college|daily|weekend)\b/)) set('occasion', 'casual');
+    if (cut(/\b(any occasion)\b/)) set('occasion', null);
+    // colour (last, so "navy" etc. aren't eaten earlier)
+    if (cut(/\b(any colou?r)\b/)) set('color', null);
+    for (const [w, c] of COLOR_WORDS) { if (new RegExp('\\b' + w + '\\b').test(t)) { set('color', c); break; } }
+    return ch;
+  }
+
+  return { garment, sketchStrokes, recognize, rasterize, makeCatalog, rank, parseChat, rng, COLORS, LABELS, OCC, UPPER, ORD, lengthLabel, fitLabel, attrLabel, N, CATS };
+})();
+
+
+</script>
+<script>
+{
+const $ = (id) => document.getElementById(id);
+const W = 1000, H = 1200;
+const stage = $('stage');
+const L = { photo: $('cPhoto'), colour: $('cColour'), floatC: $('cFloatC'), lines: $('cLines'), floatL: $('cFloatL'), stroke: $('cStroke'), guide: $('cGuide') };
+for (const c of Object.values(L)) { c.width = W; c.height = H; }
+const X = Object.fromEntries(Object.entries(L).map(([k, c]) => [k, c.getContext('2d', { willReadFrequently: k !== 'stroke' })]));
+let z = 1; for (const k of ['photo', 'colour', 'floatC', 'lines', 'floatL', 'stroke', 'guide']) L[k].style.zIndex = z++;
+
+// ---------- state ----------
+const S = { tool: 'pen', colA: '#1c1f23', colB: '#ffffff', size: { pen: 4, paint: 28, eraser: 24 }, opac: { pen: 100, paint: 85, eraser: 100 }, smooth: 45, erase: 'both', pattern: 'solid', pscale: 100, gap: 3, tol: 38, mirror: false, recent: [], hasPhoto: false };
+const toast = (t) => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2600); };
+
+// ---------- icons + tool rail ----------
+const ICON = {
+  select: '<path d="M5 3l14 8-6 1.5L10 19z"/><path d="M3 15v4a2 2 0 0 0 2 2h4" stroke-dasharray="2 2.5"/>',
+  pen: '<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="m14 6 3 3"/>',
+  paint: '<path d="M18 3l3 3-8 8-3-3z"/><path d="M10 11c-3 0-5 2-5 5 0 2-1 3-2 4 4 1 9 0 9-4"/>',
+  eraser: '<path d="m7 20-4-4 10-10 7 7-7 7z"/><path d="M7 20h13"/><path d="m9 10 7 7"/>',
+  fill: '<path d="m5 11 7-7 7 7-7 7z"/><path d="M5 11h14"/><path d="M20 16s2 2.4 2 3.5a2 2 0 0 1-4 0c0-1.1 2-3.5 2-3.5z"/>',
+  picker: '<path d="m14 4 6 6"/><path d="m17 7-9 9-3 1-1 3 3-1 1-3 9-9"/><path d="M15 3l6 6-2 2-6-6z"/>',
+  mirror: '<path d="M12 3v18"/><path d="M8 7 3 12l5 5z"/><path d="m16 7 5 5-5 5z"/>',
+};
+const TOOLS = [['select', 'Select and move (V): click an object or drag a box'], ['pen', 'Pen (B): clean lines'], ['paint', 'Paint brush (P): soft colour under the lines'], ['eraser', 'Eraser (E)'], ['fill', 'Fill (G): colour or pattern inside a shape'], ['picker', 'Colour picker (I)']];
+$('rail').innerHTML = TOOLS.map(([k, t]) => `<button class="ib" data-tool="${k}" title="${t}" aria-label="${t}" aria-pressed="${k === S.tool}"><svg viewBox="0 0 24 24">${ICON[k]}</svg></button>`).join('') +
+  `<div style="height:8px"></div><button class="ib" id="mirrorBtn" title="Mirror drawing (M): draw one side, get both" aria-label="Mirror drawing" aria-pressed="false"><svg viewBox="0 0 24 24">${ICON.mirror}</svg></button>`;
+$('rail').addEventListener('click', e => { const b = e.target.closest('[data-tool]'); if (b) setTool(b.dataset.tool); });
+$('mirrorBtn').onclick = () => setMirror(!S.mirror);
+const HINTS = { select: 'Click a shape to grab it, or drag a box. Drag to move, corners to resize. Enter to drop.', pen: 'Draw outlines and details. Lines stay crisp on top of colour.', paint: 'Paints colour under your lines, like markers on a flat sketch.', eraser: 'Choose what it erases in the panel.', fill: 'Click inside a closed shape, or on a fabric in a photo.', picker: 'Click anywhere to pick that colour.' };
+function setTool(t) {
+  if (t !== 'select') dropSel();
+  S.tool = t;
+  stage.style.cursor = t === 'select' ? 'default' : 'none';
+  for (const b of $('rail').querySelectorAll('[data-tool]')) b.setAttribute('aria-pressed', b.dataset.tool === t);
+  $('stTool').textContent = { select: 'Select', pen: 'Pen', paint: 'Paint brush', eraser: 'Eraser', fill: 'Fill', picker: 'Colour picker' }[t];
+  $('stHint').textContent = HINTS[t];
+  const br = t === 'pen' || t === 'paint' || t === 'eraser';
+  $('secBrush').classList.toggle('hidden', !br);
+  if (br) { $('brushTitle').textContent = $('stTool').textContent; $('size').value = S.size[t]; $('opac').value = S.opac[t]; syncOut(); }
+  $('eraseRow').classList.toggle('hidden', t !== 'eraser');
+  updateCursor();
+}
+function setMirror(v) { S.mirror = v; $('mirrorBtn').setAttribute('aria-pressed', v); $('mline').style.display = v ? 'block' : 'none'; toast(v ? 'Mirror on: draw one side, the other side follows' : 'Mirror off'); }
+
+// ---------- colours ----------
+const SW = ['#1c1f23', '#4a4f57', '#8d939b', '#d3d6da', '#ffffff', '#f3ead8', '#d8c3a5', '#a47551', '#5c3d2e',
+  '#7a1f2b', '#b3243a', '#e2465a', '#f08aa6', '#f6c6d0', '#e86a33', '#f2a03d', '#d9a21b', '#f4dc6b',
+  '#2f6b3f', '#5b8c3a', '#a7c46b', '#1f8a8a', '#7cc9c2', '#1f2f5c', '#2f5fb3', '#7fa6e8', '#9b86d1'];
+$('swatches').innerHTML = SW.map(c => `<button style="background:${c}" data-c="${c}" title="${c}" aria-label="Colour ${c}"></button>`).join('');
+$('swatches').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) setColA(b.dataset.c); });
+$('swatches').addEventListener('contextmenu', e => { const b = e.target.closest('[data-c]'); if (b) { e.preventDefault(); setColB(b.dataset.c); } });
+$('cA').onclick = () => $('pickA').click(); $('cB').onclick = () => $('pickB').click();
+$('pickA').oninput = e => setColA(e.target.value); $('pickB').oninput = e => setColB(e.target.value);
+$('swap').onclick = () => { const a = S.colA; S.colA = S.colB; S.colB = a; paintColours(); };
+$('recent').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) setColA(b.dataset.c); });
+function setColA(c) { S.colA = c; S.recent = [c, ...S.recent.filter(x => x !== c)].slice(0, 10); paintColours(); }
+function setColB(c) { S.colB = c; paintColours(); }
+function paintColours() {
+  $('cA').style.background = S.colA; $('cB').style.background = S.colB; $('pickA').value = S.colA; $('pickB').value = S.colB;
+  $('hexA').textContent = 'Main ' + S.colA.toUpperCase(); $('hexB').textContent = 'Pattern ground ' + S.colB.toUpperCase();
+  $('recent').innerHTML = S.recent.map(c => `<button style="background:${c}" data-c="${c}" aria-label="Recent ${c}"></button>`).join('');
+  drawPatternPreviews(); updateCursor();
+}
+
+// ---------- sliders ----------
+const outs = [['size', ''], ['opac', ''], ['smooth', ''], ['pscale', ''], ['gap', ''], ['tol', ''], ['phOp', '']];
+function syncOut() { for (const [k] of outs) $(k + 'O').textContent = $(k).value; }
+for (const [k] of outs) $(k).addEventListener('input', () => {
+  const v = +$(k).value; syncOut();
+  if (k === 'size' && S.size[S.tool] != null) { S.size[S.tool] = v; updateCursor(); }
+  if (k === 'opac' && S.opac[S.tool] != null) S.opac[S.tool] = v;
+  if (k === 'smooth') S.smooth = v; if (k === 'gap') S.gap = v; if (k === 'tol') S.tol = v;
+  if (k === 'pscale') { S.pscale = v; drawPatternPreviews(); }
+  if (k === 'phOp') L.photo.style.opacity = v / 100;
+});
+$('eraseSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; S.erase = b.dataset.v; for (const x of $('eraseSeg').children) x.setAttribute('aria-pressed', x === b); });
+
+// ---------- patterns ----------
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function shade(h, f) { const [r, g, b] = hexRgb(h); const m = (v) => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f))); return `rgb(${m(r)},${m(g)},${m(b)})`; }
+const PATTERNS = {
+  solid: { n: 'Solid', t: 64, d(c, s, a, b) { c.fillStyle = a; c.fillRect(0, 0, s, s); } },
+  floral: { n: 'Floral', t: 64, d(c, s, a, b) {
+    c.fillStyle = b; c.fillRect(0, 0, s, s);
+    const fl = (x, y, r, rot) => { c.save(); c.translate(x, y); c.rotate(rot); c.fillStyle = a; for (let i = 0; i < 5; i++) { c.rotate(Math.PI * 2 / 5); c.beginPath(); c.ellipse(0, -r * .55, r * .32, r * .55, 0, 0, Math.PI * 2); c.fill(); } c.fillStyle = shade(a, .55); c.beginPath(); c.arc(0, 0, r * .22, 0, 7); c.fill(); c.restore(); };
+    const lf = (x, y, rot) => { c.save(); c.translate(x, y); c.rotate(rot); c.fillStyle = shade(a, -.35); c.beginPath(); c.ellipse(0, 0, s * .03, s * .075, 0, 0, 7); c.fill(); c.restore(); };
+    lf(s * .37, s * .3, .9); lf(s * .87, s * .82, -.6); fl(s * .25, s * .25, s * .17, .2); fl(s * .75, s * .72, s * .14, 1.1); fl(s * .78, s * .18, s * .07, .5); fl(s * .2, s * .8, s * .08, 1.4); } },
+  polka: { n: 'Polka', t: 48, d(c, s, a, b) { c.fillStyle = b; c.fillRect(0, 0, s, s); c.fillStyle = a; for (const [x, y] of [[.25, .25], [.75, .75]]) { c.beginPath(); c.arc(x * s, y * s, s * .12, 0, 7); c.fill(); } } },
+  stripes: { n: 'Stripes', t: 40, d(c, s, a, b) { c.fillStyle = b; c.fillRect(0, 0, s, s); c.fillStyle = a; c.fillRect(0, 0, s * .38, s); } },
+  pinstripe: { n: 'Pinstripe', t: 28, d(c, s, a, b) { c.fillStyle = b; c.fillRect(0, 0, s, s); c.fillStyle = a; c.fillRect(s * .45, 0, Math.max(1, s * .07), s); } },
+  checks: { n: 'Checks', t: 56, d(c, s, a, b) { c.fillStyle = b; c.fillRect(0, 0, s, s); c.globalAlpha = .55; c.fillStyle = a; c.fillRect(0, 0, s / 2, s); c.fillRect(0, 0, s, s / 2); c.globalAlpha = 1; } },
+  plaid: { n: 'Plaid', t: 72, d(c, s, a, b) { c.fillStyle = b; c.fillRect(0, 0, s, s); c.globalAlpha = .45; c.fillStyle = a; c.fillRect(s * .1, 0, s * .3, s); c.fillRect(0, s * .1, s, s * .3); c.globalAlpha = .9; c.fillRect(s * .66, 0, s * .04, s); c.fillRect(0, s * .66, s, s * .04); c.globalAlpha = 1; } },
+  chevron: { n: 'Chevron', t: 48, d(c, s, a, b) { c.fillStyle = b; c.fillRect(0, 0, s, s); c.strokeStyle = a; c.lineWidth = s * .14; c.lineJoin = 'miter'; for (const y of [-.5, 0, .5, 1]) { c.beginPath(); c.moveTo(-s * .1, (y + .35) * s); c.lineTo(s * .5, (y + .05) * s); c.lineTo(s * 1.1, (y + .35) * s); c.stroke(); } } },
+  paisley: { n: 'Paisley', t: 80, d(c, s, a, b) {
+    c.fillStyle = b; c.fillRect(0, 0, s, s);
+    const p = (x, y, k, rot) => { c.save(); c.translate(x, y); c.rotate(rot); c.scale(k, k); c.fillStyle = a; c.beginPath(); c.moveTo(0, -18); c.bezierCurveTo(16, -18, 20, 8, 4, 16); c.bezierCurveTo(-10, 22, -16, 8, -8, 0); c.bezierCurveTo(-2, -6, -6, -12, 0, -18); c.fill(); c.fillStyle = b; c.beginPath(); c.arc(3, 4, 5, 0, 7); c.fill(); c.fillStyle = a; c.beginPath(); c.arc(3, 4, 2.2, 0, 7); c.fill(); c.restore(); };
+    p(s * .28, s * .3, s / 80, .4); p(s * .76, s * .76, s / 95, 2.6); c.fillStyle = a; for (const [x, y] of [[.75, .2], [.2, .78], [.52, .52]]) { c.beginPath(); c.arc(x * s, y * s, s * .025, 0, 7); c.fill(); } } },
+  leaf: { n: 'Leaves', t: 64, d(c, s, a, b) { c.fillStyle = b; c.fillRect(0, 0, s, s); const lf = (x, y, r) => { c.save(); c.translate(x, y); c.rotate(r); c.fillStyle = a; c.beginPath(); c.moveTo(0, -s * .16); c.quadraticCurveTo(s * .1, 0, 0, s * .16); c.quadraticCurveTo(-s * .1, 0, 0, -s * .16); c.fill(); c.strokeStyle = b; c.lineWidth = Math.max(1, s * .015); c.beginPath(); c.moveTo(0, -s * .13); c.lineTo(0, s * .13); c.stroke(); c.restore(); }; lf(s * .25, s * .28, .6); lf(s * .74, s * .72, -.7); lf(s * .78, s * .22, 2.2); lf(s * .24, s * .78, -2.3); } },
+  ikat: { n: 'Ikat', t: 60, d(c, s, a, b) { c.fillStyle = b; c.fillRect(0, 0, s, s); c.fillStyle = a; const dm = (x, y, r) => { c.beginPath(); c.moveTo(x, y - r); c.lineTo(x + r * .7, y); c.lineTo(x, y + r); c.lineTo(x - r * .7, y); c.closePath(); c.fill(); }; dm(s * .5, s * .5, s * .34); dm(0, 0, s * .34); dm(s, 0, s * .34); dm(0, s, s * .34); dm(s, s, s * .34); c.fillStyle = b; dm(s * .5, s * .5, s * .15); dm(0, 0, s * .15); dm(s, s, s * .15); dm(s, 0, s * .15); dm(0, s, s * .15); } },
+  denim: { n: 'Denim', t: 48, d(c, s, a, b) { const r = S2S.rng(9); c.fillStyle = a; c.fillRect(0, 0, s, s); for (let i = 0; i < s * 3; i++) { c.fillStyle = r() < .5 ? shade(a, .25) : shade(a, -.25); c.globalAlpha = .35; c.fillRect(r() * s, r() * s, 1.2, 1.2); } c.globalAlpha = .25; c.strokeStyle = shade(a, .45); c.lineWidth = 1; for (let k = -s; k < s * 2; k += 4) { c.beginPath(); c.moveTo(k, 0); c.lineTo(k + s, s); c.stroke(); } c.globalAlpha = 1; } },
+  linen: { n: 'Linen', t: 48, d(c, s, a, b) { const r = S2S.rng(4); c.fillStyle = a; c.fillRect(0, 0, s, s); c.globalAlpha = .18; for (let y = 0; y < s; y += 2) { c.fillStyle = r() < .5 ? shade(a, .4) : shade(a, -.3); c.fillRect(0, y, s, 1); } for (let x = 0; x < s; x += 3) { c.fillStyle = r() < .5 ? shade(a, .35) : shade(a, -.25); c.fillRect(x, 0, 1, s); } c.globalAlpha = 1; } },
+  knit: { n: 'Knit', t: 32, d(c, s, a, b) { c.fillStyle = shade(a, -.15); c.fillRect(0, 0, s, s); c.fillStyle = a; const v = (x) => { c.beginPath(); c.moveTo(x, 0); c.quadraticCurveTo(x + s * .25, s * .5, x + s * .25, s); c.lineTo(x + s * .12, s); c.quadraticCurveTo(x + s * .1, s * .55, x - s * .02, s * .1); c.fill(); c.beginPath(); c.moveTo(x + s * .5, 0); c.quadraticCurveTo(x + s * .25, s * .5, x + s * .25, s); c.lineTo(x + s * .38, s); c.quadraticCurveTo(x + s * .4, s * .55, x + s * .52, s * .1); c.fill(); }; v(0); v(s * .5); } },
+  houndstooth: { n: 'Houndstooth', t: 40, d(c, s, a, b) { c.fillStyle = b; c.fillRect(0, 0, s, s); c.fillStyle = a; const u = s / 4; c.fillRect(0, 0, u * 2, u * 2); c.beginPath(); c.moveTo(u * 2, 0); c.lineTo(u * 3, 0); c.lineTo(u * 2, u); c.closePath(); c.fill(); c.beginPath(); c.moveTo(0, u * 2); c.lineTo(0, u * 3); c.lineTo(u, u * 2); c.closePath(); c.fill(); c.beginPath(); c.moveTo(u * 2, u * 2); c.lineTo(u * 4, u * 4); c.lineTo(u * 4, u * 3); c.lineTo(u * 3, u * 2); c.closePath(); c.fill(); } },
+  sequin: { n: 'Sequins', t: 36, d(c, s, a, b) { c.fillStyle = shade(a, -.3); c.fillRect(0, 0, s, s); for (const [x, y] of [[.25, .25], [.75, .25], [0, .75], [.5, .75], [1, .75]]) { const g = c.createRadialGradient(x * s - s * .05, y * s - s * .05, 1, x * s, y * s, s * .24); g.addColorStop(0, shade(a, .7)); g.addColorStop(.5, a); g.addColorStop(1, shade(a, -.4)); c.fillStyle = g; c.beginPath(); c.arc(x * s, y * s, s * .23, 0, 7); c.fill(); } } },
+};
+function tile(key, a, b, scale) { const P = PATTERNS[key], s = Math.max(8, Math.round(P.t * scale / 100)), cv = document.createElement('canvas'); cv.width = cv.height = s; P.d(cv.getContext('2d'), s, a, b); return cv; }
+$('patterns').innerHTML = Object.entries(PATTERNS).map(([k, p]) => `<button class="pt" data-p="${k}" aria-pressed="${k === S.pattern}" title="${p.n}"><canvas width="56" height="56"></canvas>${p.n}</button>`).join('');
+$('patterns').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (!b) return; S.pattern = b.dataset.p; for (const x of $('patterns').children) x.setAttribute('aria-pressed', x === b); if (S.tool !== 'fill') setTool('fill'); toast(PATTERNS[S.pattern].n + ' selected. Click inside a shape to fill.'); });
+function drawPatternPreviews() { for (const b of $('patterns').children) { const cv = b.querySelector('canvas'), c = cv.getContext('2d'); const t = tile(b.dataset.p, S.colA, S.colB, 70); c.fillStyle = c.createPattern(t, 'repeat'); c.fillRect(0, 0, 56, 56); } }
+
+// ---------- history ----------
+const hist = [], redoS = [];
+function snap(keys) { return keys.map(k => { const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(L[k], 0, 0); return { k, c }; }); }
+function commit(keys) { if (sel) dropSel(); hist.push(snap(keys)); if (hist.length > 25) hist.shift(); redoS.length = 0; histUI(); }
+function restore(from, to) { const s = from.pop(); if (!s) return; to.push(snap(s.map(x => x.k))); for (const { k, c } of s) { X[k].clearRect(0, 0, W, H); X[k].drawImage(c, 0, 0); } histUI(); refreshEmpty(); }
+function histUI() { $('undo').disabled = !hist.length; $('redo').disabled = !redoS.length; }
+$('undo').onclick = () => { if (sel) { cancelSel(); return; } restore(hist, redoS); }; $('redo').onclick = () => { dropSel(); restore(redoS, hist); };
+
+// ---------- pointer + drawing ----------
+const rectOf = () => stage.getBoundingClientRect();
+const toCanvas = (e) => { const r = rectOf(); return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height]; };
+let drawing = null;
+function strokeTarget() { return S.tool === 'paint' ? 'colour' : 'lines'; }
+function beginStroke(e) {
+  const [x, y] = toCanvas(e);
+  const t = S.tool;
+  if (t === 'picker') { pick(x, y); return; }
+  if (t === 'fill') { doFill(x, y); return; }
+  if (t === 'eraser') { const keys = S.erase === 'both' ? ['lines', 'colour'] : [S.erase === 'colour' ? 'colour' : S.erase]; commit(keys); drawing = { t, keys, last: [x, y], sm: [x, y] }; eraseSeg(x, y, x, y, e); return; }
+  // pen / paint: draw into a stroke canvas placed right above the target layer, composite on release
+  const tgt = strokeTarget();
+  L.stroke.style.zIndex = +L[tgt].style.zIndex + 0.5 + '';
+  L.stroke.style.opacity = S.opac[t] / 100;
+  L.stroke.style.filter = t === 'paint' ? 'blur(0.6px)' : 'none';
+  drawing = { t, tgt, pts: [[x, y, pr(e)]], sm: [x, y] };
+  X.stroke.clearRect(0, 0, W, H);
+  dot(x, y, pr(e));
+}
+const pr = (e) => e.pointerType === 'pen' && e.pressure > 0 ? e.pressure : 0.6;
+function widthFor(p) { const s = S.size[drawing ? drawing.t : S.tool]; return drawing && drawing.t === 'pen' ? s * (0.45 + 0.9 * p) : s; }
+function dot(x, y, p) { const c = X.stroke; c.fillStyle = S.colA; const r = widthFor(p) / 2; for (const xx of S.mirror ? [x, W - x] : [x]) { c.beginPath(); c.arc(xx, y, r, 0, 7); c.fill(); } }
+function moveStroke(e) {
+  if (!drawing) return;
+  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  for (const ev of evs) {
+    let [x, y] = toCanvas(ev);
+    const k = 1 - S.smooth / 100 * 0.85; // stabilizer
+    drawing.sm = [drawing.sm[0] + (x - drawing.sm[0]) * k, drawing.sm[1] + (y - drawing.sm[1]) * k];
+    [x, y] = drawing.sm;
+    if (drawing.t === 'eraser') { eraseSeg(drawing.last[0], drawing.last[1], x, y, ev); drawing.last = [x, y]; continue; }
+    const pts = drawing.pts, p = pr(ev); pts.push([x, y, p]);
+    const n = pts.length; if (n < 3) continue;
+    const [a, b, c2] = [pts[n - 3], pts[n - 2], pts[n - 1]];
+    const m1 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], m2 = [(b[0] + c2[0]) / 2, (b[1] + c2[1]) / 2];
+    const ctx = X.stroke; ctx.strokeStyle = S.colA; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = widthFor(b[2]);
+    for (const mir of S.mirror ? [false, true] : [false]) { const f = (q) => mir ? W - q : q; ctx.beginPath(); ctx.moveTo(f(m1[0]), m1[1]); ctx.quadraticCurveTo(f(b[0]), b[1], f(m2[0]), m2[1]); ctx.stroke(); }
+  }
+}
+function eraseSeg(x0, y0, x1, y1) {
+  for (const k of drawing.keys) { const c = X[k]; c.save(); c.globalCompositeOperation = 'destination-out'; c.lineCap = 'round'; c.lineWidth = S.size.eraser; c.globalAlpha = S.opac.eraser / 100;
+    for (const mir of S.mirror ? [false, true] : [false]) { const f = (q) => mir ? W - q : q; c.beginPath(); c.moveTo(f(x0), y0); c.lineTo(f(x1), y1); c.stroke(); } c.restore(); }
+}
+function endStroke() {
+  if (!drawing) return;
+  if (drawing.t === 'pen' || drawing.t === 'paint') {
+    commit([drawing.tgt]);
+    const c = X[drawing.tgt]; c.save(); c.globalAlpha = S.opac[drawing.t] / 100; if (drawing.t === 'paint') c.filter = 'blur(0.6px)'; c.drawImage(L.stroke, 0, 0); c.restore();
+    X.stroke.clearRect(0, 0, W, H); if (!S.recent.includes(S.colA)) setColA(S.colA);
+  }
+  drawing = null; refreshEmpty();
+}
+stage.addEventListener('pointerdown', e => { if (e.button === 2 || e.target.closest('.selbar')) return; stage.setPointerCapture(e.pointerId); if (S.tool === 'select') selDown(e); else beginStroke(e); });
+stage.addEventListener('pointermove', e => { if (S.tool === 'select') { selMove(e); return; } moveCursor(e); moveStroke(e); });
+stage.addEventListener('pointerup', e => { if (S.tool === 'select') selUp(e); else endStroke(); }); stage.addEventListener('pointercancel', e => { if (S.tool === 'select') selUp(e); else endStroke(); });
+stage.addEventListener('pointerleave', () => { $('cursor').style.display = 'none'; $('cross').style.display = 'none'; });
+
+// ---------- cursor ----------
+function updateCursor() { const c = $('cursor'), r = rectOf(); const s = S.size[S.tool]; if (s) { const px = s * r.width / W; c.style.width = c.style.height = Math.max(4, px) + 'px'; c.style.background = S.tool === 'eraser' ? 'rgba(255,255,255,.35)' : 'transparent'; } }
+function moveCursor(e) {
+  if (S.tool === 'select') { $('cursor').style.display = 'none'; $('cross').style.display = 'none'; return; }
+  const r = rectOf(), x = e.clientX - r.left, y = e.clientY - r.top, br = S.size[S.tool] != null;
+  const c = $('cursor'), cr = $('cross'); c.style.display = br ? 'block' : 'none'; cr.style.display = br ? 'none' : 'block';
+  c.style.left = cr.style.left = x + 'px'; c.style.top = cr.style.top = y + 'px';
+  if (!br) cr.innerHTML = `<g fill="none" stroke="#16191c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICON[S.tool]}</g>`;
+}
+new ResizeObserver(updateCursor).observe(stage);
+
+// ---------- colour picker tool ----------
+function pick(x, y) {
+  x = Math.round(x); y = Math.round(y);
+  for (const k of ['lines', 'colour', 'photo']) { const d = X[k].getImageData(x, y, 1, 1).data; if (d[3] > 40) { setColA('#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, '0')).join('')); toast('Picked ' + S.colA.toUpperCase()); return; } }
+  setColA('#ffffff');
+}
+
+// ---------- fill ----------
+function dil(m, r) { if (r <= 0) return m; const t = new Uint8Array(W * H), o = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) { let last = -1e9; for (let x = 0; x < W; x++) { if (m[y * W + x]) last = x; if (x - last <= r) t[y * W + x] = 1; } last = 1e9; for (let x = W - 1; x >= 0; x--) { if (m[y * W + x]) last = x; if (last - x <= r) t[y * W + x] = 1; } }
+  for (let x = 0; x < W; x++) { let last = -1e9; for (let y = 0; y < H; y++) { if (t[y * W + x]) last = y; if (y - last <= r) o[y * W + x] = 1; } last = 1e9; for (let y = H - 1; y >= 0; y--) { if (t[y * W + x]) last = y; if (last - y <= r) o[y * W + x] = 1; } }
+  return o; }
+function flood(sx, sy, ok) { const m = new Uint8Array(W * H), st = [sy * W + sx]; let n = 0, edge = false; if (!ok(st[0])) return { m, n, edge };
+  m[st[0]] = 1; while (st.length) { const p = st.pop(), x = p % W, y = (p / W) | 0; n++; if (x === 0 || y === 0 || x === W - 1 || y === H - 1) edge = true;
+    if (x > 0 && !m[p - 1] && ok(p - 1)) { m[p - 1] = 1; st.push(p - 1); } if (x < W - 1 && !m[p + 1] && ok(p + 1)) { m[p + 1] = 1; st.push(p + 1); }
+    if (y > 0 && !m[p - W] && ok(p - W)) { m[p - W] = 1; st.push(p - W); } if (y < H - 1 && !m[p + W] && ok(p + W)) { m[p + W] = 1; st.push(p + W); } }
+  return { m, n, edge }; }
+function maskCanvas(m) { const c = document.createElement('canvas'); c.width = W; c.height = H; const cx = c.getContext('2d'), id = cx.createImageData(W, H); for (let i = 0; i < m.length; i++) if (m[i]) id.data[i * 4 + 3] = 255; cx.putImageData(id, 0, 0); return c; }
+function paintSource() { const c = document.createElement('canvas'); c.width = W; c.height = H; const cx = c.getContext('2d'); cx.fillStyle = S.pattern === 'solid' ? S.colA : cx.createPattern(tile(S.pattern, S.colA, S.colB, S.pscale), 'repeat'); cx.fillRect(0, 0, W, H); return c; }
+function doFill(x, y) {
+  x = Math.max(0, Math.min(W - 1, Math.round(x))); y = Math.max(0, Math.min(H - 1, Math.round(y)));
+  const t0 = performance.now();
+  const ld = X.lines.getImageData(0, 0, W, H).data, wall = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) if (ld[i * 4 + 3] > 60) wall[i] = 1;
+  const wallD = dil(wall, S.gap);
+  const p0 = y * W + x;
+  // inside a photo fabric (and no line wall closing a small shape here)? -> colour-similarity region, recolour keeping shading
+  const pd = S.hasPhoto ? X.photo.getImageData(0, 0, W, H).data : null;
+  const onPhoto = pd && pd[p0 * 4 + 3] > 20;
+  let lineRegion = wallD[p0] ? null : flood(x, y, (p) => !wallD[p]);
+  const useLines = lineRegion && lineRegion.n > 30 && !(onPhoto && lineRegion.edge);
+  if (useLines) {
+    let m = dil(lineRegion.m, S.gap + 2);
+    for (let i = 0; i < m.length; i++) if (wall[i] && !lineRegion.m[i] && !m[i]) m[i] = 0; // keep under-line coverage from dilation only
+    commit(['colour']);
+    const src = paintSource(), mk = maskCanvas(m), sc = src.getContext('2d'); sc.globalCompositeOperation = 'destination-in'; sc.drawImage(mk, 0, 0);
+    X.colour.drawImage(src, 0, 0);
+    if (lineRegion.edge) toast('That area is open to the edge, so the background was filled. Undo, then close the outline or raise "Close gaps".');
+  } else if (onPhoto) {
+    const sr = pd[p0 * 4], sg = pd[p0 * 4 + 1], sb = pd[p0 * 4 + 2], tol2 = S.tol * S.tol * 3;
+    const reg = flood(x, y, (p) => { if (wall[p] || pd[p * 4 + 3] < 20) return false; const dr = pd[p * 4] - sr, dg = pd[p * 4 + 1] - sg, db = pd[p * 4 + 2] - sb; return dr * dr + dg * dg + db * db <= tol2; });
+    if (reg.n < 30) { toast('Nothing to fill there. Try raising "Photo match".'); return; }
+    const m = dil(reg.m, 2);
+    commit(['photo']);
+    recolourPhoto(m);
+  } else { toast(wallD[p0] ? 'You clicked on a line. Click inside the shape.' : 'Nothing to fill there.'); return; }
+  $('stHint').textContent = `Filled in ${Math.round(performance.now() - t0)} ms`;
+  refreshEmpty();
+}
+function recolourPhoto(m) {
+  const id = X.photo.getImageData(0, 0, W, H), d = id.data;
+  const src = paintSource().getContext('2d').getImageData(0, 0, W, H).data;
+  // keep the fabric's light and shadow: new = target colour × (pixel luminance / average luminance of the region)
+  let sum = 0, n = 0; for (let i = 0; i < m.length; i++) if (m[i]) { sum += 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]; n++; }
+  const avg = Math.max(30, sum / n);
+  for (let i = 0; i < m.length; i++) if (m[i]) { const o = i * 4, lum = 0.299 * d[o] + 0.587 * d[o + 1] + 0.114 * d[o + 2], k = Math.min(1.6, lum / avg);
+    for (let c = 0; c < 3; c++) { const t = src[o + c]; d[o + c] = Math.max(0, Math.min(255, k <= 1 ? t * k : t + (255 - t) * (k - 1) * 0.9)); } }
+  X.photo.putImageData(id, 0, 0);
+}
+
+// ---------- templates ----------
+const T = { cat: 'top', sleeve: 'short', neck: 'round', length: 'mid', fit: 'straight' };
+const TCATS = [['top', 'Top'], ['kurta', 'Kurta'], ['dress', 'Dress'], ['skirt', 'Skirt'], ['trousers', 'Trousers']];
+const TOPT = { sleeve: [['none', 'Sleeveless'], ['short', 'Short'], ['three', '3/4'], ['full', 'Full']], neck: [['round', 'Round'], ['v', 'V-neck'], ['high', 'High']], fit: [['straight', 'Straight'], ['flared', 'Flared']] };
+$('tCat').innerHTML = TCATS.map(([k, n]) => `<button data-v="${k}" aria-pressed="${k === T.cat}">${n}</button>`).join('');
+$('tCat').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; T.cat = b.dataset.v; if (T.cat === 'top' && T.length === 'long') T.length = 'mid'; renderTOpts(); });
+function renderTOpts() {
+  for (const x of $('tCat').children) x.setAttribute('aria-pressed', x.dataset.v === T.cat);
+  const up = S2S.UPPER.has(T.cat);
+  const lens = (T.cat === 'top' ? ['short', 'mid'] : ['short', 'mid', 'long']).map(v => [v, S2S.lengthLabel(T.cat, v)]);
+  const fits = TOPT.fit.map(([v]) => [v, S2S.fitLabel(T.cat, v)]);
+  const groups = [...(up ? [['sleeve', 'Sleeves', TOPT.sleeve], ['neck', 'Neckline', TOPT.neck]] : []), ['length', 'Length', lens], ['fit', 'Silhouette', fits]];
+  $('tOpts').innerHTML = groups.map(([k, n, opts]) => `<div class="lbl">${n}</div><div class="seg" data-k="${k}">${opts.map(([v, l]) => `<button data-v="${v}" aria-pressed="${T[k] === v}">${l}</button>`).join('')}</div>`).join('');
+  if (guideOn) drawGuide();
+}
+$('tOpts').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; T[b.parentElement.dataset.k] = b.dataset.v; renderTOpts(); });
+function templatePaths() {
+  const spec = { category: T.cat, sleeve: T.sleeve, neck: T.neck, length: T.length, fit: T.fit, pattern: 'solid' };
+  const g = S2S.garment(spec, null), all = [g.outline, ...g.extra];
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const p of all.flat()) { x0 = Math.min(x0, p[0]); y0 = Math.min(y0, p[1]); x1 = Math.max(x1, p[0]); y1 = Math.max(y1, p[1]); }
+  const sc = Math.min(W * 0.72 / (x1 - x0), H * 0.78 / (y1 - y0)), ox = W / 2 - (x0 + x1) / 2 * sc, oy = H / 2 - (y0 + y1) / 2 * sc;
+  const paths = all.map(st => st.map(([x, y]) => [x * sc + ox, y * sc + oy]));
+  paths[0].push(paths[0][0]);
+  // construction details designers expect on a flat: centre-front line on kurtas, waist seam on dresses
+  const cx = W / 2;
+  if (T.cat === 'kurta') { const ny = Math.max(...paths[0].filter(p => Math.abs(p[0] - cx) < 2).map(p => p[1]).slice(0, 1)); const top = paths[0][0][1]; paths.push([[cx, top], [cx, top + 0.11 * (y1 - y0) * sc]]); }
+  if (T.cat === 'dress') { const wy = oy + 0.75 * sc; const xs = paths[0].filter(p => Math.abs(p[1] - wy) < 30).map(p => p[0]); const hw = 0.40 * sc; paths.push([[cx - hw, wy], [cx + hw, wy]]); }
+  return paths;
+}
+function strokePaths(ctx, paths, style) { ctx.save(); Object.assign(ctx, style); for (const p of paths) { ctx.beginPath(); p.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); } ctx.restore(); }
+let guideOn = false;
+function drawGuide() { X.guide.clearRect(0, 0, W, H); if (!guideOn) return; X.guide.setLineDash([10, 8]); strokePaths(X.guide, templatePaths(), { strokeStyle: 'rgba(15,110,104,.55)', lineWidth: 2.5, lineJoin: 'round', lineCap: 'round' }); X.guide.setLineDash([]); }
+$('tGuide').onclick = () => { guideOn = !guideOn; $('tGuide').setAttribute('aria-pressed', guideOn); $('tGuide').textContent = guideOn ? 'Hide tracing guide' : 'Show as tracing guide'; drawGuide(); refreshEmpty(); };
+$('tPlace').onclick = () => {
+  commit(['lines']);
+  // draw on its own canvas first so the new template can be picked up as one object straight away
+  const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H;
+  strokePaths(tmp.getContext('2d'), templatePaths(), { strokeStyle: '#1c1f23', lineWidth: 3.5, lineJoin: 'round', lineCap: 'round' });
+  X.lines.drawImage(tmp, 0, 0); refreshEmpty();
+  const a = tmp.getContext('2d').getImageData(0, 0, W, H).data, m = new Uint8Array(W * H); for (let i = 0; i < m.length; i++) if (a[i * 4 + 3]) m[i] = 1;
+  setTool('select'); liftMask(dil(m, 3), true);
+  toast('Template placed and selected: drag to move, pull a corner to resize. Press Enter or click Done to drop it.');
+};
+
+// ---------- photo upload ----------
+$('upBtn').onclick = () => $('file').click();
+$('file').onchange = (e) => { const f = e.target.files[0]; if (f) loadPhoto(f); e.target.value = ''; };
+const wrap = $('wrap');
+wrap.addEventListener('dragover', e => { e.preventDefault(); $('drop').style.display = 'grid'; });
+wrap.addEventListener('dragleave', e => { if (!wrap.contains(e.relatedTarget)) $('drop').style.display = 'none'; });
+wrap.addEventListener('drop', e => { e.preventDefault(); $('drop').style.display = 'none'; const f = [...e.dataTransfer.files].find(f => f.type.startsWith('image/')); if (f) loadPhoto(f); });
+function loadPhoto(f) {
+  const url = URL.createObjectURL(f), img = new Image();
+  img.onload = () => { commit(['photo']); X.photo.clearRect(0, 0, W, H); const sc = Math.min(W / img.width, H / img.height) * 0.94, w = img.width * sc, h = img.height * sc; X.photo.drawImage(img, (W - w) / 2, (H - h) / 2, w, h); URL.revokeObjectURL(url); S.hasPhoto = true; renderLayers(); refreshEmpty(); setTool('fill'); toast('Photo added. Click on the garment with Fill to recolour it or add a print. Draw on top with the pen.'); };
+  img.onerror = () => toast('That file could not be opened as an image.');
+  img.src = url;
+}
+
+// ---------- layers ----------
+const LAY = [['lines', 'Lines'], ['colour', 'Colour and fills'], ['photo', 'Photo']];
+const EYE = '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', BIN = '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/>';
+function renderLayers() {
+  $('layers').innerHTML = LAY.map(([k, n]) => `<div class="layer"><button class="ib" data-eye="${k}" aria-pressed="${L[k].style.visibility !== 'hidden'}" title="Show or hide" aria-label="Show or hide ${n}"><svg viewBox="0 0 24 24">${EYE}</svg></button><span>${n}${k === 'photo' && !S.hasPhoto ? ' <span style="color:var(--soft)">(none)</span>' : ''}</span><button class="ib" data-clr="${k}" title="Clear ${n}" aria-label="Clear ${n}"><svg viewBox="0 0 24 24">${BIN}</svg></button></div>`).join('');
+}
+$('layers').addEventListener('click', e => {
+  const eb = e.target.closest('[data-eye]'), cb = e.target.closest('[data-clr]');
+  if (eb) { const k = eb.dataset.eye, vis = L[k].style.visibility === 'hidden'; L[k].style.visibility = vis ? 'visible' : 'hidden'; eb.setAttribute('aria-pressed', vis); }
+  if (cb) { const k = cb.dataset.clr; commit([k]); X[k].clearRect(0, 0, W, H); if (k === 'photo') { S.hasPhoto = false; renderLayers(); } refreshEmpty(); }
+});
+$('clearAll').onclick = () => { commit(['lines', 'colour', 'photo']); for (const k of ['lines', 'colour', 'photo']) X[k].clearRect(0, 0, W, H); S.hasPhoto = false; renderLayers(); refreshEmpty(); toast('Canvas cleared. Undo brings it back.'); };
+
+function refreshEmpty() { const any = hist.length || S.hasPhoto || guideOn; $('empty').style.display = any ? 'none' : 'grid'; }
+
+// ---------- keyboard ----------
+addEventListener('keydown', e => {
+  if (e.target.matches('input,select,textarea')) return;
+  const k = e.key.toLowerCase();
+  if (sel) {
+    if (k === 'enter' || k === 'escape') { e.preventDefault(); dropSel(); return; }
+    if (k === 'delete' || k === 'backspace') { e.preventDefault(); selAction('del'); return; }
+    if ((e.ctrlKey || e.metaKey) && k === 'd') { e.preventDefault(); selAction('dup'); return; }
+    const ar = { arrowleft: [-1, 0], arrowright: [1, 0], arrowup: [0, -1], arrowdown: [0, 1] }[k];
+    if (ar) { e.preventDefault(); const st = e.shiftKey ? 10 : 2; sel.nx += ar[0] * st; sel.ny += ar[1] * st; renderSel(); return; }
+  }
+  if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); (e.shiftKey ? $('redo') : $('undo')).click(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); $('redo').click(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const m = { v: 'select', b: 'pen', p: 'paint', e: 'eraser', g: 'fill', i: 'picker' };
+  if (m[k]) setTool(m[k]); else if (k === 'm') setMirror(!S.mirror); else if (k === 'x') $('swap').click();
+  else if (k === '[' || k === ']') { const t = S.tool; if (S.size[t] != null) { S.size[t] = Math.max(1, Math.min(80, S.size[t] + (k === ']' ? 2 : -2))); $('size').value = S.size[t]; syncOut(); updateCursor(); } }
+});
+
+// ---------- select + move ----------
+let sel = null, selDrag = null;
+function bboxOf(m) { let x0 = W, y0 = H, x1 = -1, y1 = -1; for (let y = 0; y < H; y++) { const r = y * W; for (let x = 0; x < W; x++) if (m[r + x]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } } return x1 < 0 ? null : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 }; }
+function contentMask() { const a = X.lines.getImageData(0, 0, W, H).data, b = X.colour.getImageData(0, 0, W, H).data, m = new Uint8Array(W * H); for (let i = 0; i < m.length; i++) if (a[i * 4 + 3] > 10 || b[i * 4 + 3] > 10) m[i] = 1; return m; }
+function liftMask(mask, alreadyCommitted) {
+  const mk = maskCanvas(mask), parts = {};
+  for (const k of ['lines', 'colour']) {
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const cx = c.getContext('2d', { willReadFrequently: true });
+    cx.drawImage(L[k], 0, 0); cx.globalCompositeOperation = 'destination-in'; cx.drawImage(mk, 0, 0); parts[k] = c;
+  }
+  const a = parts.lines.getContext('2d').getImageData(0, 0, W, H).data, b = parts.colour.getContext('2d').getImageData(0, 0, W, H).data, got = new Uint8Array(W * H);
+  for (let i = 0; i < got.length; i++) if (a[i * 4 + 3] > 10 || b[i * 4 + 3] > 10) got[i] = 1;
+  const box = bboxOf(got); if (!box) { toast('Nothing there to select. Click on a line or a filled area, or drag a box.'); return false; }
+  if (!alreadyCommitted) commit(['lines', 'colour']);
+  else hist[hist.length - 1].push(...snap(['colour'])); // so undo also restores the colour layer
+  for (const k of ['lines', 'colour']) { const c = X[k]; c.save(); c.globalCompositeOperation = 'destination-out'; c.drawImage(mk, 0, 0); c.restore(); }
+  sel = { parts, box, nx: box.x, ny: box.y, nw: box.w, nh: box.h, flipped: false };
+  renderSel(); $('stHint').textContent = HINTS.select; return true;
+}
+function renderSel() {
+  X.floatL.clearRect(0, 0, W, H); X.floatC.clearRect(0, 0, W, H);
+  const sb = $('selbox'), bar = $('selbar');
+  if (!sel) { sb.style.display = 'none'; bar.style.display = 'none'; return; }
+  const b = sel.box;
+  for (const [k, ctx] of [['lines', X.floatL], ['colour', X.floatC]]) {
+    ctx.save();
+    if (sel.flipped) { ctx.translate(sel.nx * 2 + sel.nw, 0); ctx.scale(-1, 1); }
+    ctx.drawImage(sel.parts[k], b.x, b.y, b.w, b.h, sel.nx, sel.ny, sel.nw, sel.nh); ctx.restore();
+  }
+  const pc = (v, d) => v / d * 100 + '%';
+  sb.classList.remove('marq'); sb.style.display = 'block';
+  sb.style.left = pc(sel.nx, W); sb.style.top = pc(sel.ny, H); sb.style.width = pc(sel.nw, W); sb.style.height = pc(sel.nh, H);
+  bar.style.display = 'flex'; bar.style.left = pc(sel.nx + sel.nw / 2, W);
+  bar.style.top = sel.ny < 70 ? `calc(${pc(sel.ny + sel.nh, H)} + 52px)` : `calc(${pc(sel.ny, H)} - 12px)`;
+}
+function dropSel() {
+  if (!sel) return; renderSel();
+  X.lines.drawImage(L.floatL, 0, 0); X.colour.drawImage(L.floatC, 0, 0);
+  sel = null; renderSel(); refreshEmpty();
+}
+function cancelSel() { sel = null; renderSel(); restore(hist, redoS); }
+function selAction(a) {
+  if (!sel) return;
+  if (a === 'done') dropSel();
+  else if (a === 'del') { sel = null; renderSel(); toast('Deleted. Undo brings it back.'); refreshEmpty(); }
+  else if (a === 'flip') { sel.flipped = !sel.flipped; renderSel(); }
+  else if (a === 'dup') { renderSel(); X.lines.drawImage(L.floatL, 0, 0); X.colour.drawImage(L.floatC, 0, 0); sel.nx += 30; sel.ny += 30; renderSel(); toast('Copy made. Move it where you want it.'); }
+}
+$('selbar').addEventListener('pointerdown', e => e.stopPropagation());
+$('selbar').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b) selAction(b.dataset.a); });
+function selDown(e) {
+  const [x, y] = toCanvas(e), h = e.target.closest && e.target.closest('[data-h]');
+  if (sel && h) { selDrag = { mode: 'scale', h: h.dataset.h, x, y, o: { ...sel } }; return; }
+  if (sel && x >= sel.nx && x <= sel.nx + sel.nw && y >= sel.ny && y <= sel.ny + sel.nh) { selDrag = { mode: 'move', x, y, o: { ...sel } }; return; }
+  dropSel();
+  selDrag = { mode: 'marq', x, y, x2: x, y2: y };
+}
+function selMove(e) {
+  if (!selDrag) return;
+  const [x, y] = toCanvas(e), d = selDrag;
+  if (d.mode === 'move') { sel.nx = d.o.nx + x - d.x; sel.ny = d.o.ny + y - d.y; renderSel(); }
+  else if (d.mode === 'scale') {
+    const o = d.o, ax = d.h.includes('w') ? o.nx + o.nw : o.nx, ay = d.h.includes('n') ? o.ny + o.nh : o.ny; // the opposite corner stays put
+    let nw, nh;
+    if (e.shiftKey) { nw = Math.max(8, Math.abs(x - ax)); nh = Math.max(8, Math.abs(y - ay)); } // Shift: stretch freely
+    else { const k = Math.max(0.08, Math.max(Math.abs(x - ax) / o.nw, Math.abs(y - ay) / o.nh)); nw = o.nw * k; nh = o.nh * k; }
+    sel.nw = nw; sel.nh = nh; sel.nx = d.h.includes('w') ? ax - nw : ax; sel.ny = d.h.includes('n') ? ay - nh : ay; renderSel();
+  } else {
+    d.x2 = x; d.y2 = y; const sb = $('selbox'); sb.classList.add('marq'); sb.style.display = 'block';
+    sb.style.left = Math.min(d.x, x) / W * 100 + '%'; sb.style.top = Math.min(d.y, y) / H * 100 + '%'; sb.style.width = Math.abs(x - d.x) / W * 100 + '%'; sb.style.height = Math.abs(y - d.y) / H * 100 + '%';
+  }
+}
+function selUp() {
+  const d = selDrag; selDrag = null; if (!d || d.mode !== 'marq') return;
+  $('selbox').style.display = 'none';
+  const w = Math.abs(d.x2 - d.x), h = Math.abs(d.y2 - d.y);
+  if (w < 6 && h < 6) { // a click picks up the whole object under the pointer: its lines and its fill together
+    const x = Math.max(0, Math.min(W - 1, Math.round(d.x))), y = Math.max(0, Math.min(H - 1, Math.round(d.y)));
+    // 1) clicked inside a closed shape: take just that shape and its outline, even if other drawings overlap it
+    const ld = X.lines.getImageData(0, 0, W, H).data, wall = new Uint8Array(W * H); for (let i = 0; i < wall.length; i++) if (ld[i * 4 + 3] > 60) wall[i] = 1;
+    const wallD = dil(wall, S.gap);
+    if (!wallD[y * W + x]) { const r = flood(x, y, (p) => !wallD[p]); if (r.n > 30 && !r.edge) { liftMask(dil(r.m, S.gap + 5)); return; } }
+    // 2) otherwise take the whole connected drawing under the pointer
+    const cmd = dil(contentMask(), 6);
+    if (!cmd[y * W + x]) { toast('Click on a line or a filled area to select it, or drag a box.'); return; }
+    liftMask(flood(x, y, (p) => cmd[p] === 1).m);
+  } else {
+    const m = new Uint8Array(W * H), x0 = Math.max(0, Math.round(Math.min(d.x, d.x2))), y0 = Math.max(0, Math.round(Math.min(d.y, d.y2))), x1 = Math.min(W, Math.round(Math.max(d.x, d.x2))), y1 = Math.min(H, Math.round(Math.max(d.y, d.y2)));
+    for (let yy = y0; yy < y1; yy++) m.fill(1, yy * W + x0, yy * W + x1);
+    liftMask(m);
+  }
+}
+
+// ---------- init ----------
+setColA('#1c1f23'); S.recent = []; setColB('#ffffff');
+renderTOpts(); renderLayers(); setTool('pen'); syncOut(); histUI();
+}
+</script>
+</body>
+</html>
