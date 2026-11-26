@@ -67,8 +67,10 @@ async function entriesByIds(ids, uid) {
   return raw.map((r, i) => { const e = r && JSON.parse(r); if (!e) return null; return { id: e.id, week: e.week, title: e.title, name: e.name, note: e.note, fit: e.fit, created: e.created, photo: imgUrl(e.id, 'p'), design: imgUrl(e.id, 'd'), votes: +extra[i * 2], votedByMe: !!extra[i * 2 + 1], mine: e.uid === uid }; }).filter(Boolean);
 }
 async function stylist(gk, photo, week) {
-  try { return await gemini(gk, [{ text: `You are a warm, encouraging fashion stylist judging a weekly design challenge. Theme: "${week.theme}": ${week.brief}
-The image shows a shopper's design on a model. Return JSON only: {"fit": 0-100 (how well it fits the theme), "note": "one or two short, specific, friendly sentences about the design and how it fits the theme"}` }, imgPart(photo.mime, photo.b64)]); } catch { return null; }
+  const timeout = new Promise(r => setTimeout(() => r(null), 15000)); // never hold up a submission for the note
+  const ask = gemini(gk, [{ text: `You are a warm, encouraging fashion stylist judging a weekly design challenge. Theme: "${week.theme}": ${week.brief}
+The image shows a shopper's design on a model. Return JSON only: {"fit": 0-100 (how well it fits the theme), "note": "one or two short, specific, friendly sentences about the design and how it fits the theme"}` }, imgPart(photo.mime, photo.b64)], { models: ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest'] }).catch(() => null);
+  return Promise.race([ask, timeout]);
 }
 
 module.exports = async function handler(req, res) {
@@ -124,11 +126,12 @@ module.exports = async function handler(req, res) {
       const myName = await cmd('GET', `un:${uid}`); if (!myName) return res.status(400).json({ error: 'Please choose a nickname first.' });
       const n = await cmd('INCR', `sub:${uid}:${week.id}`); await cmd('EXPIRE', `sub:${uid}:${week.id}`, String(8 * 86400));
       if (n > 3) return res.status(429).json({ error: 'You can enter up to 3 designs per week.' });
-      const st = process.env.GEMINI_API_KEY ? await stylist(process.env.GEMINI_API_KEY, photo, week) : null;
       const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      const e = { id, week: week.id, uid, name: myName, title, created: Date.now(), fit: st && Number.isFinite(+st.fit) ? Math.max(0, Math.min(100, Math.round(+st.fit))) : null, note: st ? clean(st.note, 280) : '' };
+      const e = { id, week: week.id, uid, name: myName, title, created: Date.now(), fit: null, note: '' };
       await pipe([['SET', `e:${id}`, JSON.stringify(e)], ['SET', `img:${id}`, photo.b64], ['SET', `dsg:${id}`, design.b64], ['ZADD', `wk:${week.id}`, '0', id], ['LPUSH', `ue:${uid}`, id],
         ['HINCRBY', `us:${uid}`, 'entries', '1'], ['SADD', `uw:${uid}`, week.id], ['ZINCRBY', 'lb:all', '20', uid], ['ZINCRBY', `lb:${week.id}`, '20', uid]]);
+      const st = process.env.GEMINI_API_KEY ? await stylist(process.env.GEMINI_API_KEY, photo, week) : null;
+      if (st) { e.fit = Number.isFinite(+st.fit) ? Math.max(0, Math.min(100, Math.round(+st.fit))) : null; e.note = clean(st.note, 280); await cmd('SET', `e:${id}`, JSON.stringify(e)); }
       return res.json({ ok: true, entry: (await entriesByIds([id], uid))[0], week });
     }
     if (a === 'vote') {

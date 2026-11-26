@@ -1052,7 +1052,9 @@ const setName = (n) => { ME.name = n; try { localStorage.setItem('ybu_name', n);
 const BADGE_ICON = { challenger: '🏁', voter: '⚖️', crowd: '❤️', streak: '🔥', star: '⭐', trend: '🥉', champ: '🏆' };
 let cTab = 'week', lbScope = 'week', cWeek = null, cdTimer = null;
 async function api(path, body) {
-  const r = await fetch('api/challenge' + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ uid: ME.uid, ...body }) } : {});
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 45000);
+  let r; try { r = await fetch('api/challenge' + path, { signal: ctl.signal, ...(body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ uid: ME.uid, ...body }) } : {}) }); }
+  catch (e) { throw new Error(e.name === 'AbortError' ? 'The server took too long. Check the Challenge tab: your entry may already be there.' : 'Could not reach the server.'); } finally { clearTimeout(t); }
   const j = await r.json().catch(() => ({ error: 'Unexpected reply from the server.' })); if (!r.ok) throw new Error(j.error || 'Request failed.'); return j;
 }
 $('chalBtn').onclick = () => openChallenge('week');

@@ -1,10 +1,11 @@
 // Shared Gemini helper: tries current models in order and falls back when one is busy, rate-limited or retired.
 let goodModel = null; // remember which model name works so later calls skip the failures
 const MODELS = () => [goodModel, process.env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-flash-lite-latest'].filter((m, i, a) => m && a.indexOf(m) === i);
-async function gemini(key, parts) {
+async function gemini(key, parts, opts = {}) {
   const errs = [];
   // Busy (503), rate-limited (429) or missing (404) models fall through to the next model; each gets one retry when busy.
-  for (const model of MODELS()) {
+  const list = opts.models ? opts.models.concat(MODELS().filter(m => !opts.models.includes(m))) : MODELS();
+  for (const model of list) {
     for (let attempt = 0; attempt < 2; attempt++) {
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST',
