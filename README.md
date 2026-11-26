@@ -2,7 +2,7 @@
 
 Draw the outfit in your head, or edit a real dress photo. See it on a model, find similar products in real stores, and enter it in a weekly design challenge.
 
-**Try it:** https://youbeu.vercel.app · **Demo video (1 min):** https://youbeu.vercel.app/demo.mp4
+**Try it:** https://youbeu.vercel.app · **Demo video (1 min):** https://youbeu.vercel.app/demo.mp4 · **Write-up:** [PDF](docs/YouBeU-Studio-Writeup.pdf)
 
 [![Watch the 1-minute demo](docs/demo-poster.jpg)](https://youbeu.vercel.app/demo.mp4)
 
