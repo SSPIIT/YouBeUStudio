@@ -40,7 +40,7 @@ async function flux(acct, token, prompt, ref) {
 module.exports = async function handler(req, res) {
   res.setHeader('cache-control', 'no-store');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
-  const { GEMINI_API_KEY: gk, CF_ACCOUNT_ID: acct, CF_API_TOKEN: token } = process.env;
+  const gk = process.env.GEMINI_API_KEY, acct = (process.env.CF_ACCOUNT_ID || '').trim(), token = (process.env.CF_API_TOKEN || '').trim();
   if (!gk || !acct || !token) return res.status(501).json({ error: 'Image generation is not set up on the server yet (Cloudflare keys missing).' });
   const ip = (req.headers['x-forwarded-for'] || '').split(',')[0] || 'x', now = Date.now();
   const h = (hits.get(ip) || []).filter(t => now - t < 3600e3); if (h.length >= 15) return res.status(429).json({ error: 'Too many images this hour. Please try again later.' });

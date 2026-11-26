@@ -36,8 +36,17 @@ module.exports = async function handler(req, res) {
   out.cloudflare_keys_set = { CF_ACCOUNT_ID: !!process.env.CF_ACCOUNT_ID, CF_API_TOKEN: !!process.env.CF_API_TOKEN };
   if (process.env.CF_API_TOKEN) {
     try {
-      const r = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', { headers: { authorization: 'Bearer ' + process.env.CF_API_TOKEN } }); const j = await r.json().catch(() => ({}));
-      out.cloudflare_token = j.success ? { ok: true, status: j.result?.status } : { ok: false, error: (j.errors || []).map(e => e.message).join('; ') || r.status };
+      // account-owned tokens verify under /accounts/{id}, user-owned tokens under /user
+      const hdr = { headers: { authorization: 'Bearer ' + process.env.CF_API_TOKEN } }, acct = (process.env.CF_ACCOUNT_ID || '').trim();
+      const tries = [acct && `https://api.cloudflare.com/client/v4/accounts/${acct}/tokens/verify`, 'https://api.cloudflare.com/client/v4/user/tokens/verify'].filter(Boolean);
+      const errs = [];
+      for (const u of tries) { const r = await fetch(u, hdr); const j = await r.json().catch(() => ({})); if (j.success) { out.cloudflare_token = { ok: true, status: j.result?.status, kind: u.includes('/accounts/') ? 'account token' : 'user token' }; break; } errs.push((j.errors || []).map(e => e.message).join('; ') || r.status); }
+      if (!out.cloudflare_token) out.cloudflare_token = { ok: false, error: errs.join(' | ') };
+      // a real (tiny) call to Workers AI confirms the token can run models
+      if (out.cloudflare_token.ok && /[?&]ai=1/.test(req.url || '')) {
+        const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acct}/ai/models/search?per_page=1`, hdr); const j = await r.json().catch(() => ({}));
+        out.workers_ai = j.success ? { ok: true } : { ok: false, error: (j.errors || []).map(e => e.message).join('; ') || r.status };
+      }
     } catch (e) { out.cloudflare_token = { ok: false, error: String(e.message).slice(0, 120) }; }
   }
   out.ready = !!(out.gemini?.ok && out.serpapi?.ok);
