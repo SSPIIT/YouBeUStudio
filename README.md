@@ -2,7 +2,23 @@
 
 A browser sketchboard for fashion: draw a garment, fill it with colours and prints, start from editable templates, or upload a photo of a dress and restyle it. Built for shoppers and designers alike. It runs fully in the browser, with no server and nothing uploaded.
 
-This is step 1 of **YouBeU**, which started as our team's Myntra HackerRamp project ("Sketch Your Style": draw what you want and find it). The full plan:
+**Live:** https://youbeu.vercel.app
+
+<table>
+<tr>
+<td width="50%"><b>Sketch → AI model photo</b><br><img src="docs/screenshots/see-it-on-a-model.png" alt="A sketched top and jeans turned into a photo of a model wearing them"></td>
+<td width="50%"><b>Find it: real products ranked by how they look</b><br><img src="docs/screenshots/find-it.png" alt="A maroon floral top sketch matched to real Meesho and Amazon products"></td>
+</tr>
+<tr>
+<td colspan="2"><b>Weekly design challenge: vote, AI stylist notes, leaderboard</b><br><img src="docs/screenshots/challenge.png" alt="Challenge gallery with model photos, original designs, stylist notes and votes"></td>
+</tr>
+<tr>
+<td width="50%"><b>Colours and 16 prints</b><br><img src="docs/screenshots/colours-and-prints.png" alt="Colour palette and pattern fills" width="300"></td>
+<td width="50%"><b>Editable garment templates</b><br><img src="docs/screenshots/templates.png" alt="Template options for sleeves, neckline, length and silhouette" width="280"></td>
+</tr>
+</table>
+
+**YouBeU** started as our team's Myntra HackerRamp project ("Sketch Your Style": draw what you want and find it). The full plan:
 
 1. **Sketchboard** (this): draw, fill, template, edit photos. ✅
 2. **Find it:** AI reads the design and finds real products on Myntra, Amazon, Flipkart, Meesho and AJIO that look like it. ✅
